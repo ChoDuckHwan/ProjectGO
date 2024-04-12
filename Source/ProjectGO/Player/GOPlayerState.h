@@ -19,17 +19,26 @@ class PROJECTGO_API AGOPlayerState : public APlayerState, public IAbilitySystemI
 	GENERATED_BODY()
 public:
 	AGOPlayerState();
-
+	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	class UGOAttributeSetBase* GetAttributeSetBase() const;
 
+	int32 GetPlayerLevel()const;
+
 protected:
 	virtual void BeginPlay() override;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UGOAbilitySystemComponent> AbilitySystemComponent;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UGOAttributeSetBase> AttributeSetBase;
+
+private:
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing=OnRep_Level)
+	int32 Level = 1;
+
+	UFUNCTION()
+	void OnRep_Level(const int32& oldLevel);
 };

@@ -28,9 +28,12 @@ public:
 	virtual void PossessedBy(AController* NewController) override;
 
 	virtual void OnRep_PlayerState() override;
-	virtual void InitializeAbilityValue(AGOPlayerState* PS) override;
-
+	
+	/* Combat Interface*/
+	virtual int32 GetLevel() override;
+	/* Combat Interface*/
 protected:
+	virtual void InitializeAbilityValue(AGOPlayerState* PS) override;
 private:
 	/** Top down camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))

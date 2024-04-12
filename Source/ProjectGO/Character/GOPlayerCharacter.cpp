@@ -72,6 +72,12 @@ void AGOPlayerCharacter::OnRep_PlayerState()
 	InitializeAbilityValue(PS);
 }
 
+int32 AGOPlayerCharacter::GetLevel()
+{
+	check(GetPlayerState<AGOPlayerState>());
+	return GetPlayerState<AGOPlayerState>()->GetPlayerLevel();	
+}
+
 void AGOPlayerCharacter::InitializeAbilityValue(AGOPlayerState* PS)
 {
 	if (PS)

@@ -3,6 +3,7 @@
 
 #include "ProjectGO/Character/ProjectGOMonster.h"
 #include "AbilitySystemComponent.h"
+#include "Net/UnrealNetwork.h"
 #include "Abilities/GOAbilitySystemComponent.h"
 #include "Abilities/AttributeSet/GOAttributeSetBase.h"
 
@@ -29,6 +30,17 @@ void AProjectGOMonster::BeginPlay()
 	InitializeAbilityValue(nullptr);
 }
 
+void AProjectGOMonster::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AProjectGOMonster, Level);
+}
+
+int32 AProjectGOMonster::GetLevel()
+{
+	return Level;
+}
+
 void AProjectGOMonster::InitializeAbilityValue(AGOPlayerState* PS)
 {
 	AbilitySystemComponent = MonsterAbilitySystemComponent;
@@ -41,4 +53,8 @@ void AProjectGOMonster::InitializeAbilityValue(AGOPlayerState* PS)
 	GetAbilitySystemComponent()->InitAbilityActorInfo(this, this);
 	Super::InitializeAbilityValue(PS);
 
+}
+
+void AProjectGOMonster::OnRep_Level(const int32& oldLevel)
+{
 }

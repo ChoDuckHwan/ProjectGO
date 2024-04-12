@@ -7,6 +7,7 @@
 #include "AbilitySystemInterface.h"
 #include "GameplayTagContainer.h"
 #include "GameplayEffectTypes.h"
+#include "ProjectGO/Interaction/CombatInterface.h"
 #include "ProjectGOCharacter.generated.h"
 
 class UGOAbilitySystemComponent;
@@ -17,11 +18,14 @@ class AGOPlayerState;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCharacterDiedDelegate, AProjectGOCharacter*, Character);
 
 UCLASS(Blueprintable)
-class AProjectGOCharacter : public ACharacter, public IAbilitySystemInterface
+class AProjectGOCharacter : public ACharacter, public IAbilitySystemInterface, public ICombatInterface
 {
 	GENERATED_BODY()
 
 public:
+	
+	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
+
 	AProjectGOCharacter(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	
 	UPROPERTY(BlueprintAssignable, category="Character")
@@ -38,21 +42,7 @@ public:
 	virtual void Die();
 
 	UFUNCTION(BlueprintCallable, category = "Character")
-	virtual void FinishDying();
-
-	UFUNCTION(BlueprintCallable, category="character|Attribute")
-	float GetHealth() const;
-
-	UFUNCTION(BlueprintCallable, category = "character|Attribute")
-	float GetMaxHealth() const;
-
-	UFUNCTION(BlueprintCallable, category = "character|Attribute")
-	float GetMana() const;
-
-	UFUNCTION(BlueprintCallable, category = "character|Attribute")
-	float GetMaxMana() const;
-	UFUNCTION(BlueprintCallable, category = "character|Attribute")
-	int32 GetCharacterLevel() const;
+	virtual void FinishDying();	
 
 	// Called every frame.
 	virtual void Tick(float DeltaSeconds) override;	
@@ -63,9 +53,9 @@ public:
 
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
-	virtual void InitializeAbilityValue(AGOPlayerState* PS);
-
 protected:	
+
+	virtual void InitializeAbilityValue(AGOPlayerState* PS);
 
 	UPROPERTY(VisibleAnywhere)
 	TWeakObjectPtr<class UGOAbilitySystemComponent> AbilitySystemComponent;
@@ -89,46 +79,26 @@ protected:
 	TSubclassOf<class UGameplayEffect> DefaultAttributes;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, category = "Abilities")
+	TSubclassOf<class UGameplayEffect> DefaultSeceondaryAttributes;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, category = "Abilities")
+	TSubclassOf<class UGameplayEffect> DefaultVitalAttributes;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, category = "Abilities")
 	TArray<TSubclassOf<class UGameplayEffect>> StartupEffects;
 
 	virtual void AddCharacterAbilities();
-	virtual void InitializeAttributes();
+	virtual void InitializeAttributes() const;
 	virtual void AddStartupEffects();
 
-	virtual void SetHealth(float Health);
-	virtual void SetMana(float Mana);
-	virtual void SetMaxHealth(float MaxHealth);
-	virtual void SetMaxMana(float MaxMana);
-
-	FDelegateHandle HealthChangeDelegateHandle;
-	FDelegateHandle MaxHealthChangeDelegateHandle;
-	FDelegateHandle ManaChangeDelegateHandle;
-	FDelegateHandle MaxManaChangeDelegateHandle;
-	FDelegateHandle CharacterLevelDelegateHandle;
-
+	void ApplyEffectToSelf(TSubclassOf<UGameplayEffect> GameplayEffectClass, float SelfLevel) const;
+		
 	UFUNCTION(BlueprintCallable)
 	virtual UGOAttributeSetBase* GetAttributeSetBase() const;
 
-	void BindAttributes();
-
-	virtual void HealthChanged(const FOnAttributeChangeData& Data);
-	virtual void MaxHealthChanged(const FOnAttributeChangeData& Data);
-	virtual void ManaChanged(const FOnAttributeChangeData& Data);
-	virtual void MaxManaChanged(const FOnAttributeChangeData& Data);
-	virtual void CharacterLevelChanged(const FOnAttributeChangeData& Data);
+	void BindAttributes();	
 	virtual void StunTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
-
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnHealthChanged(const float& newValue, const float& oldValue);
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnMaxHealthChanged(const float& newValue, const float& oldValue);
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnManaChanged(const float& newValue, const float& oldValue);
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnMaxManaChanged(const float& newValue, const float& oldValue);
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnCharacterLevelChanged(const float& newValue, const float& oldValue);
-
+		
 	virtual void BindMouseCursorEvent();
 
 	UFUNCTION(BlueprintImplementableEvent) void CharacterOnClicked(AActor* TouchedActor, FKey ButtonPressed);

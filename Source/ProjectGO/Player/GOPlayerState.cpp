@@ -2,6 +2,7 @@
 
 
 #include "ProjectGO/Player/GOPlayerState.h"
+#include "Net/UnrealNetwork.h"
 #include "ProjectGO/Character/Abilities/GOAbilitySystemComponent.h"
 #include "ProjectGO/Character/Abilities/AttributeSet/GOAttributeSetBase.h"
 
@@ -15,9 +16,19 @@ AGOPlayerState::AGOPlayerState()
 	NetUpdateFrequency = 100.0f;
 }
 
+void AGOPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AGOPlayerState, Level);
+}
+
 void AGOPlayerState::BeginPlay()
 {
 	Super::BeginPlay();	
+}
+
+void AGOPlayerState::OnRep_Level(const int32& oldLevel)
+{
 }
 
 UAbilitySystemComponent* AGOPlayerState::GetAbilitySystemComponent() const
@@ -28,4 +39,9 @@ UAbilitySystemComponent* AGOPlayerState::GetAbilitySystemComponent() const
 UGOAttributeSetBase* AGOPlayerState::GetAttributeSetBase() const
 {
 	return AttributeSetBase;
+}
+
+int32 AGOPlayerState::GetPlayerLevel() const
+{
+	return Level;
 }

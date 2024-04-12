@@ -7,7 +7,7 @@
 #include "GOAbilitySystemComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FReceivedDamageDelegate, UGOAbilitySystemComponent*, Source, float, UnmitigatedDamage, float, MitigatedDamage);
-
+DECLARE_MULTICAST_DELEGATE_OneParam(FEffectAssetTags, const FGameplayTagContainer& /*AssetTags*/);
 /**
  * 
  */
@@ -23,4 +23,16 @@ public :
 	FReceivedDamageDelegate ReceivedDamage;
 
 	virtual void ReceiveDamage(UGOAbilitySystemComponent* Source, float UnmitigatedDamage, float MitigatedDamage);
+
+	void AbilityActorInfoSet();
+
+	FEffectAssetTags EffectAssetTags;
+
+protected:
+	void EffectApplied(UAbilitySystemComponent* ASC, const FGameplayEffectSpec& GES, FActiveGameplayEffectHandle AGEH);
+
+	UFUNCTION(Client, Reliable)
+	void EffectApplied_Client(const FGameplayTagContainer& GameplayTagContainer);
+	void EffectApplied_Client_Implementation(const FGameplayTagContainer& GameplayTagContainer);
+
 };

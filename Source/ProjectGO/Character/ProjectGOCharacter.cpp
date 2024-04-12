@@ -12,26 +12,29 @@
 #include "GameFramework/PlayerController.h"
 #include "Materials/Material.h"
 #include "Engine/World.h"
-#include "GameFramework/PlayerState.h"
+#include "Net/UnrealNetwork.h"
 #include "ProjectGO/HUD/InGameHud.h"
 #include "ProjectGO/Player/GOPlayerState.h"
 #include "ProjectGO/PlayerController/ProjectGOPlayerController.h"
-#include "ProjectGO/UI/Character/UW_CharacterInfoBar.h"
+
 //#include "ProjectGO/UI/Character/UW_CharacterHead.h"
+
+void AProjectGOCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+}
 
 AProjectGOCharacter::AProjectGOCharacter(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	DeadTag = FGameplayTag::RequestGameplayTag(FName("State.Dead"));
-	EffectRemoveOnDeadTag = FGameplayTag::RequestGameplayTag(FName("Effect.RemoveOnDeath"));	
-
+	EffectRemoveOnDeadTag = FGameplayTag::RequestGameplayTag(FName("Effect.RemoveOnDeath"));
 	DeadTag = FGameplayTag::RequestGameplayTag(FName("State.Dead"));
-
 }
 
 
 bool AProjectGOCharacter::IsAlive() const
 {
-	return GetHealth() > 0.f;
+	return AttributeSetBase->GetHealth() > 0.f;
 }
 
 int32 AProjectGOCharacter::GetAbilityLevel(EGOAbilityID AbilityID) const
@@ -97,51 +100,6 @@ void AProjectGOCharacter::FinishDying()
 	Destroy();
 }
 
-float AProjectGOCharacter::GetHealth() const
-{
-	if(GetAttributeSetBase())
-	{
-		return GetAttributeSetBase()->GetHealth();
-	}
-	return 0.0f;
-}
-
-float AProjectGOCharacter::GetMaxHealth() const
-{
-	if (GetAttributeSetBase())
-	{
-		return GetAttributeSetBase()->GetMaxHealth();
-	}
-	return 0.0f;
-}
-
-float AProjectGOCharacter::GetMana() const
-{
-	if (GetAttributeSetBase())
-	{
-		return GetAttributeSetBase()->GetMana();
-	}
-	return 0.0f;
-}
-
-float AProjectGOCharacter::GetMaxMana() const
-{
-	if (GetAttributeSetBase())
-	{
-		return GetAttributeSetBase()->GetMaxMana();
-	}
-	return 0.0f;
-}
-
-int32 AProjectGOCharacter::GetCharacterLevel() const
-{
-	if (GetAttributeSetBase())
-	{
-		return GetAttributeSetBase()->GetLevel();
-	}
-	return 0;
-}
-
 void AProjectGOCharacter::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
@@ -175,10 +133,7 @@ void AProjectGOCharacter::InitializeAbilityValue(AGOPlayerState* PS)
 	BindAttributes();
 	AbilitySystemComponent->SetTagMapCount(DeadTag, 0);
 	InitializeAttributes();
-	SetHealth(GetMaxHealth());
-	SetMana(GetMaxMana());
-	SetMaxHealth(GetMaxHealth());
-	SetMaxMana(GetMaxMana());
+	AbilitySystemComponent->AbilityActorInfoSet();
 
 	if(AProjectGOPlayerController* GOPlayerController = Cast<AProjectGOPlayerController>(GetController()))
 	{
@@ -206,25 +161,13 @@ void AProjectGOCharacter::AddCharacterAbilities()
 	}
 }
 
-void AProjectGOCharacter::InitializeAttributes()
+void AProjectGOCharacter::InitializeAttributes() const
 {
-	if(!AbilitySystemComponent.IsValid())
-	{
-		return;
-	}
-	if(!DefaultAttributes)
-	{
-		UE_LOG(LogTemp, Error, TEXT("%s() Missing DefaultAttributes for %s. Please fill in the character's Blueprint."), *FString(__FUNCTION__), *GetName());
-		return;
-	}
-	FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
-	EffectContext.AddSourceObject(this);
-		
-	FGameplayEffectSpecHandle NewHandle = AbilitySystemComponent->MakeOutgoingSpec(DefaultAttributes, GetCharacterLevel(), EffectContext);
-	if(NewHandle.IsValid())
-	{
-		FActiveGameplayEffectHandle ActiveHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*NewHandle.Data.Get(), AbilitySystemComponent.Get());
-	}
+	ApplyEffectToSelf(DefaultAttributes, 1.0f);
+	ApplyEffectToSelf(DefaultSeceondaryAttributes, 1.0f);
+
+	//In DefaultSeceondaryAttributes set vital max value so after call DefaultVitalAttributes apply
+	ApplyEffectToSelf(DefaultVitalAttributes, 1.0f);	
 }
 
 void AProjectGOCharacter::AddStartupEffects()
@@ -239,7 +182,7 @@ void AProjectGOCharacter::AddStartupEffects()
 
 	for(TSubclassOf<UGameplayEffect> GameplayEffect : StartupEffects)
 	{
-		FGameplayEffectSpecHandle NewHandle = AbilitySystemComponent->MakeOutgoingSpec(GameplayEffect, GetCharacterLevel(), EffectContext);
+		FGameplayEffectSpecHandle NewHandle = AbilitySystemComponent->MakeOutgoingSpec(GameplayEffect, ICombatInterface::GetLevel(), EffectContext);
 		if (NewHandle.IsValid())
 		{
 			FActiveGameplayEffectHandle ActiveHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*NewHandle.Data.Get(), AbilitySystemComponent.Get());
@@ -248,35 +191,23 @@ void AProjectGOCharacter::AddStartupEffects()
 	Cast<UGOAbilitySystemComponent>(AbilitySystemComponent)->StartupEffectsApplied = true;
 }
 
-void AProjectGOCharacter::SetHealth(float Health)
+void AProjectGOCharacter::ApplyEffectToSelf(TSubclassOf<UGameplayEffect> GameplayEffectClass, float SelfLevel) const
 {
-	if(GetAttributeSetBase())
+	if (!AbilitySystemComponent.IsValid())
 	{
-		GetAttributeSetBase()->SetHealth(Health);
+		return;
 	}
-}
-
-void AProjectGOCharacter::SetMana(float Mana)
-{
-	if (GetAttributeSetBase())
+	if (!GameplayEffectClass)
 	{
-		GetAttributeSetBase()->SetMana(Mana);
+		UE_LOG(LogTemp, Error, TEXT("%s() Missing DefaultAttributes for %s. Please fill in the character's Blueprint."), *FString(__FUNCTION__), *GetName());
+		return;
 	}
-}
-
-void AProjectGOCharacter::SetMaxHealth(float MaxHealth)
-{
-	if (GetAttributeSetBase())
+	FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+	EffectContext.AddSourceObject(this);
+	const FGameplayEffectSpecHandle NewHandle = AbilitySystemComponent->MakeOutgoingSpec(GameplayEffectClass, SelfLevel, EffectContext);
+	if (NewHandle.IsValid())
 	{
-		GetAttributeSetBase()->SetMaxHealth(MaxHealth);
-	}
-}
-
-void AProjectGOCharacter::SetMaxMana(float MaxMana)
-{
-	if (GetAttributeSetBase())
-	{
-		GetAttributeSetBase()->SetMaxMana(MaxMana);
+		AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*NewHandle.Data.Get(), AbilitySystemComponent.Get());
 	}
 }
 
@@ -287,62 +218,7 @@ UGOAttributeSetBase* AProjectGOCharacter::GetAttributeSetBase() const
 
 void AProjectGOCharacter::BindAttributes()
 {
-	if (AbilitySystemComponent.IsValid() && AttributeSetBase.IsValid())
-	{
-		HealthChangeDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(GetAttributeSetBase()->GetHealthAttribute()).AddUObject(this, &AProjectGOCharacter::HealthChanged);
-		MaxHealthChangeDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(GetAttributeSetBase()->GetMaxHealthAttribute()).AddUObject(this, &AProjectGOCharacter::MaxHealthChanged);
-		ManaChangeDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(GetAttributeSetBase()->GetManaAttribute()).AddUObject(this, &AProjectGOCharacter::ManaChanged);
-		MaxManaChangeDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(GetAttributeSetBase()->GetMaxManaAttribute()).AddUObject(this, &AProjectGOCharacter::MaxManaChanged);
-		CharacterLevelDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(GetAttributeSetBase()->GetLevelAttribute()).AddUObject(this, &AProjectGOCharacter::CharacterLevelChanged);
-		
-		AbilitySystemComponent->RegisterGameplayTagEvent(FGameplayTag::RequestGameplayTag(FName("State.Debuff.Stun")), EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AProjectGOCharacter::StunTagChanged);
-
-		if (GetNetMode() == NM_Client)
-		{
-			OnHealthChanged(GetAttributeSetBase()->GetHealth(), GetAttributeSetBase()->GetHealth());
-			OnMaxHealthChanged(GetAttributeSetBase()->GetMaxHealth(), GetAttributeSetBase()->GetMaxHealth());
-			OnManaChanged(GetAttributeSetBase()->GetMana(), GetAttributeSetBase()->GetMana());
-			OnMaxManaChanged(GetAttributeSetBase()->GetMaxMana(), GetAttributeSetBase()->GetMaxMana());
-		}
-	}
-}
-
-void AProjectGOCharacter::HealthChanged(const FOnAttributeChangeData& Data)
-{
-	UE_LOG(LogTemp, Warning, TEXT("HealthChanged"));
-	OnHealthChanged(Data.NewValue, Data.OldValue);
-	if (GetNetMode() == NM_DedicatedServer)
-	{
-		UE_LOG(LogTemp, Log, TEXT("Server"));
-	}
-	if (GetNetMode() == NM_Client)
-	{
-		UE_LOG(LogTemp, Log, TEXT("Client"));
-	}
-}
-
-void AProjectGOCharacter::MaxHealthChanged(const FOnAttributeChangeData& Data)
-{
-	UE_LOG(LogTemp, Warning, TEXT("MaxHealthChanged"));
-	OnMaxHealthChanged(Data.NewValue, Data.OldValue);
-}
-
-void AProjectGOCharacter::ManaChanged(const FOnAttributeChangeData& Data)
-{
-	UE_LOG(LogTemp, Warning, TEXT("ManaChanged"));
-	OnManaChanged(Data.NewValue, Data.OldValue);
-}
-
-void AProjectGOCharacter::MaxManaChanged(const FOnAttributeChangeData& Data)
-{
-	UE_LOG(LogTemp, Warning, TEXT("MaxManaChanged"));
-	OnMaxManaChanged(Data.NewValue, Data.OldValue);
-}
-
-void AProjectGOCharacter::CharacterLevelChanged(const FOnAttributeChangeData& Data)
-{
-	UE_LOG(LogTemp, Warning, TEXT("CharacterLevelChanged"));
-	OnCharacterLevelChanged(Data.NewValue, Data.OldValue);
+	
 }
 
 void AProjectGOCharacter::StunTagChanged(const FGameplayTag CallbackTag, int32 NewCount)

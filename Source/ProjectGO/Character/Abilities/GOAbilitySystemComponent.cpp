@@ -7,4 +7,23 @@ void UGOAbilitySystemComponent::ReceiveDamage(UGOAbilitySystemComponent* Source,
 {
 	ReceiveDamage(Source, UnmitigatedDamage, MitigatedDamage);
 }
+
+void UGOAbilitySystemComponent::AbilityActorInfoSet()
+{
+	//Called In server
+	OnGameplayEffectAppliedDelegateToSelf.AddUObject(this, &ThisClass::EffectApplied);
+}
+
+void UGOAbilitySystemComponent::EffectApplied(UAbilitySystemComponent* ASC, const FGameplayEffectSpec& GES, FActiveGameplayEffectHandle AGEH)
+{
+	FGameplayTagContainer GameplayTagContainer;
+	GES.GetAllAssetTags(GameplayTagContainer);
+
+	EffectApplied_Client(GameplayTagContainer);
+}
+
+void UGOAbilitySystemComponent::EffectApplied_Client_Implementation(const FGameplayTagContainer& GameplayTagContainer)
+{
+	EffectAssetTags.Broadcast(GameplayTagContainer);
+}
  
