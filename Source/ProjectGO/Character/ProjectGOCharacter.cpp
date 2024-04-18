@@ -144,6 +144,12 @@ void AProjectGOCharacter::InitializeAbilityValue(AGOPlayerState* PS)
 	}
 }
 
+FVector AProjectGOCharacter::GetCombatSocketLocation()
+{
+	if (!GetMesh()) return FVector();
+	return GetMesh()->GetSocketLocation(WeaponTipSocketName);
+}
+
 void AProjectGOCharacter::AddCharacterAbilities()
 {
 	if (GetLocalRole() != ROLE_Authority || !AbilitySystemComponent.IsValid() || AbilitySystemComponent->AbilitiesGiven)

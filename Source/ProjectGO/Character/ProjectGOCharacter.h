@@ -57,6 +57,12 @@ protected:
 
 	virtual void InitializeAbilityValue(AGOPlayerState* PS);
 
+	//SocketName that fired character's projectile location
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FName WeaponTipSocketName;
+
+	virtual FVector GetCombatSocketLocation() override;
+
 	UPROPERTY(VisibleAnywhere)
 	TWeakObjectPtr<class UGOAbilitySystemComponent> AbilitySystemComponent;
 
