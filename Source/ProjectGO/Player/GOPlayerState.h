@@ -23,7 +23,7 @@ public:
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	class UGOAttributeSetBase* GetAttributeSetBase() const;
-
+	UAttributeSet* GetAttributeSet() const;
 	int32 GetPlayerLevel()const;
 
 protected:

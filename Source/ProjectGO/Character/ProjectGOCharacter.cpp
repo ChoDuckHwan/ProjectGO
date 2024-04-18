@@ -150,15 +150,7 @@ void AProjectGOCharacter::AddCharacterAbilities()
 	{
 		return;
 	}
-	for(const TSubclassOf<UGOCharacterGameplayAbility>& StartupAbility : CharacterAbilities)
-	{
-		if(!StartupAbility.GetDefaultObject())
-		{
-			continue;
-		}
-		AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(StartupAbility, GetAbilityLevel(StartupAbility.GetDefaultObject()->AbilityID),
-			static_cast<int32>(StartupAbility.GetDefaultObject()->AbilityID)));
-	}
+	AbilitySystemComponent->AddCharacterAbilities(CharacterAbilities);
 }
 
 void AProjectGOCharacter::InitializeAttributes() const

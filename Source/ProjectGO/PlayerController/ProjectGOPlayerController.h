@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Templates/SubclassOf.h"
+#include "GameplayTagContainer.h"
 #include "GameFramework/PlayerController.h"
 #include "ProjectGOPlayerController.generated.h"
 
@@ -11,6 +12,8 @@
 class UNiagaraSystem;
 class UInputMappingContext;
 class UInputAction;
+class UDA_GOInputConfig;
+class UGOAbilitySystemComponent;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -47,9 +50,13 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	const bool& GetConsumeMove() const;
+
 protected:
 	/** True if the controlled character should navigate to the mouse cursor. */
 	uint32 bMoveToMouseCursor : 1;
+
+	UPROPERTY(EditDefaultsOnly, Category = Input)
+	TObjectPtr<UDA_GOInputConfig> InputConfig;
 
 	virtual void SetupInputComponent() override;
 	
@@ -75,7 +82,17 @@ private:
 	FVector CachedDestination;
 
 	bool bIsTouch; // Is it a touch device
-	float FollowTime; // For how long it has been pressed
+	float FollowTime; // For how long it has been pressed	
+
+	UFUNCTION()	void AbilityInputTagPressed(FGameplayTag InputTag);
+	UFUNCTION()	void AbilityInputTagReleased(FGameplayTag InputTag);
+	UFUNCTION()	void AbilityInputTagHeld(FGameplayTag InputTag);
+
+	UPROPERTY()
+	TWeakObjectPtr<UGOAbilitySystemComponent> GOAbilitySystemComponent;
+
+	UFUNCTION()
+	TWeakObjectPtr<UGOAbilitySystemComponent> GetGOASC();
 };
 
 

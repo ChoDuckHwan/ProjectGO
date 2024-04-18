@@ -16,12 +16,12 @@ public class ProjectGO : ModuleRules
 				"NavigationSystem",
 				"AIModule",
 				"Niagara",
-				"EnhancedInput"
+				"EnhancedInput",
+				"GameplayTags"
 			});
 		PrivateDependencyModuleNames.AddRange(new string[]
 		{
 			"GameplayAbilities",
-			"GameplayTags",
 			"GameplayTasks"
 		});
 

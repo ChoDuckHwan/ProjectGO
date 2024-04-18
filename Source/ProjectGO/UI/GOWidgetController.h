@@ -3,16 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/NoExportTypes.h"
+#include "GameFramework/PlayerController.h"
+#include "GameFramework/PlayerState.h"
+#include "AbilitySystemComponent.h"
 #include "GOWidgetController.generated.h"
 
 /**
  * 
  */
-class APlayerController;
-class APlayerState;
-class UAbilitySystemComponent;
-class UAttributeSet;
 
 USTRUCT(BlueprintType)
 struct FWidgetControllerParams
@@ -24,16 +22,16 @@ struct FWidgetControllerParams
 	PlayerController(PC), PlayerState(PS), AbilitySystemComponent(UASC), AttributeSet(AS){}
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TObjectPtr<APlayerController> PlayerController = nullptr;
+	TWeakObjectPtr<APlayerController> PlayerController = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TObjectPtr <APlayerState > PlayerState = nullptr;
+	TWeakObjectPtr<APlayerState> PlayerState = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent = nullptr;
+	TWeakObjectPtr<UAbilitySystemComponent> AbilitySystemComponent = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TObjectPtr<UAttributeSet> AttributeSet = nullptr;
+	TWeakObjectPtr<UAttributeSet> AttributeSet = nullptr;
 };
 
 UCLASS()
@@ -45,19 +43,20 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetWidgetControllerParams(const FWidgetControllerParams& Params);
 
+	UFUNCTION(BlueprintCallable)
 	virtual void BroadcastInitValue();
 	virtual void BindCallbacksToDependencies();
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "WidgetController")
-	TObjectPtr<APlayerController> PlayerController;
+	TWeakObjectPtr<APlayerController> PlayerController;
 
 	UPROPERTY(BlueprintReadOnly, Category = "WidgetController")
-	TObjectPtr<APlayerState> PlayerState;
+	TWeakObjectPtr<APlayerState> PlayerState;
 
 	UPROPERTY(BlueprintReadOnly, Category = "WidgetController")
-	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
+	TWeakObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 
 	UPROPERTY(BlueprintReadOnly, Category = "WidgetController")
-	TObjectPtr<UAttributeSet> AttributeSet;
+	TWeakObjectPtr<UAttributeSet> AttributeSet;
 
 };

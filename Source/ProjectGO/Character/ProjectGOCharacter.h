@@ -73,7 +73,7 @@ protected:
 	TObjectPtr<UAnimMontage> DeathMontage;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, category = "Animation")
-	TArray<TSubclassOf<class UGOCharacterGameplayAbility>> CharacterAbilities;
+	TArray<TSubclassOf<class UGameplayAbility>> CharacterAbilities;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, category = "Abilities")
 	TSubclassOf<class UGameplayEffect> DefaultAttributes;

@@ -14,5 +14,9 @@ class PROJECTGO_API UGOAssetManager : public UAssetManager
 {
 	GENERATED_BODY()
 
+protected:
 	virtual void StartInitialLoading() override;
+
+public:
+	static UGOAssetManager& Get();
 };

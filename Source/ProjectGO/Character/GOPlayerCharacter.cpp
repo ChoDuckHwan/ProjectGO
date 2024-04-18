@@ -62,7 +62,7 @@ void AGOPlayerCharacter::PossessedBy(AController* NewController)
 	InitializeAbilityValue(PS);
 
 	AddStartupEffects();
-	AddCharacterAbilities();
+	AddCharacterAbilities();	
 }
 
 void AGOPlayerCharacter::OnRep_PlayerState()

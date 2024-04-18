@@ -3,6 +3,7 @@
 
 #include "ProjectGO/UI/GOWidgetController.h"
 
+
 void UGOWidgetController::SetWidgetControllerParams(const FWidgetControllerParams& Params)
 {
 	PlayerController = Params.PlayerController;

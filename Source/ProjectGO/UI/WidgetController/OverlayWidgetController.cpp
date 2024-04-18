@@ -7,7 +7,7 @@
 
 void UOverlayWidgetController::BroadcastInitValue()
 {
-	if(const UGOAttributeSetBase* GOAttributeSet = Cast<UGOAttributeSetBase>(AttributeSet))
+	if(const UGOAttributeSetBase* GOAttributeSet = Cast<UGOAttributeSetBase>(AttributeSet.Get()))
 	{
 		 OnHealthChanged.Broadcast(GOAttributeSet->GetHealth());
 		 OnMaxHealthChanged.Broadcast(GOAttributeSet->GetMaxHealth());
@@ -18,12 +18,12 @@ void UOverlayWidgetController::BroadcastInitValue()
 
 void UOverlayWidgetController::BindCallbacksToDependencies()
 {
-	if (const UGOAttributeSetBase* GOAttributeSet = Cast<UGOAttributeSetBase>(AttributeSet))
+	if (const UGOAttributeSetBase* GOAttributeSet = Cast<UGOAttributeSetBase>(AttributeSet.Get()))
 	{
-		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(GOAttributeSet->GetHealthAttribute()).AddUObject(this, &ThisClass::HealthChanged);
-		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(GOAttributeSet->GetMaxHealthAttribute()).AddUObject(this, &ThisClass::MaxHealthChanged);
-		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(GOAttributeSet->GetManaAttribute()).AddUObject(this, &ThisClass::ManaChanged);
-		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(GOAttributeSet->GetMaxManaAttribute()).AddUObject(this, &ThisClass::MaxManaChanged);
+		AbilitySystemComponent.Get()->GetGameplayAttributeValueChangeDelegate(GOAttributeSet->GetHealthAttribute()).AddUObject(this, &ThisClass::HealthChanged);
+		AbilitySystemComponent.Get()->GetGameplayAttributeValueChangeDelegate(GOAttributeSet->GetMaxHealthAttribute()).AddUObject(this, &ThisClass::MaxHealthChanged);
+		AbilitySystemComponent.Get()->GetGameplayAttributeValueChangeDelegate(GOAttributeSet->GetManaAttribute()).AddUObject(this, &ThisClass::ManaChanged);
+		AbilitySystemComponent.Get()->GetGameplayAttributeValueChangeDelegate(GOAttributeSet->GetMaxManaAttribute()).AddUObject(this, &ThisClass::MaxManaChanged);
 
 		//AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(GOAttributeSet->GetLevelAttribute()).AddUObject(this, &ThisClass::CharacterLevelChanged);
 

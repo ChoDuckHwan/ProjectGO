@@ -41,6 +41,11 @@ UGOAttributeSetBase* AGOPlayerState::GetAttributeSetBase() const
 	return AttributeSetBase;
 }
 
+UAttributeSet* AGOPlayerState::GetAttributeSet() const
+{
+	return AttributeSetBase;
+}
+
 int32 AGOPlayerState::GetPlayerLevel() const
 {
 	return Level;
