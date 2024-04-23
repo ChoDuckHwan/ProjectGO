@@ -8,6 +8,7 @@
 #include "GameplayTagContainer.h"
 #include "GameplayEffectTypes.h"
 #include "ProjectGO/Interaction/CombatInterface.h"
+#include "ProjectGO/UI/WidgetController/OverlayWidgetController.h"
 #include "ProjectGOCharacter.generated.h"
 
 class UGOAbilitySystemComponent;
@@ -23,8 +24,13 @@ class AProjectGOCharacter : public ACharacter, public IAbilitySystemInterface, p
 	GENERATED_BODY()
 
 public:
-	
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	TObjectPtr<UAnimMontage> HitReactMontage;
+
 	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
+	UFUNCTION(NetMulticast, Reliable)
+	virtual void MulticastHandleDeath();
+	virtual void MulticastHandleDeath_Implementation();
 
 	AProjectGOCharacter(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	
@@ -39,7 +45,7 @@ public:
 
 	virtual void RemoveCharacterAbilities();
 
-	virtual void Die();
+	virtual void Die() override;
 
 	UFUNCTION(BlueprintCallable, category = "Character")
 	virtual void FinishDying();	
@@ -53,7 +59,11 @@ public:
 
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
+	virtual UAnimMontage* GetHitReactMontage_Implementation() override;
+	
 protected:	
+	UPROPERTY(EditAnywhere)
+	float RagdollLifeTime = 5.f;
 
 	virtual void InitializeAbilityValue(AGOPlayerState* PS);
 
@@ -93,6 +103,18 @@ protected:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, category = "Abilities")
 	TArray<TSubclassOf<class UGameplayEffect>> StartupEffects;
 
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, category = "UI|WidgetComponent")
+	TObjectPtr<UWidgetComponent> HealthBar_Head;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, category = "UI|HeadInfo")
+	TSubclassOf<UUserWidget> MyHealthBar_HeadClass;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, category = "UI|HeadInfo")
+	TSubclassOf<UUserWidget> MyTeamHealthBar_HeadClass;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, category = "UI|HeadInfo")
+	TSubclassOf<UUserWidget> EnemyHealthBar_HeadClass;
+
 	virtual void AddCharacterAbilities();
 	virtual void InitializeAttributes() const;
 	virtual void AddStartupEffects();
@@ -111,6 +133,12 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent) void CharacterCursorBeginOvered(AActor* TouchedActor);
 	UFUNCTION(BlueprintImplementableEvent) void CharacterCursorEndOvered(AActor* TouchedActor);
 
+//Head Healthbar delegate
+protected:
+	UPROPERTY(BlueprintAssignable)
+	FOnAttributeChangedSignature HealthChangedSignature;
 
+	UPROPERTY(BlueprintAssignable)
+	FOnAttributeChangedSignature MaxHealthChangedSignature;
 };
 

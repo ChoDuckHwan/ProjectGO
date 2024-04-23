@@ -51,7 +51,9 @@ public:
 	FGameplayTag InputTag_Item5;
 	FGameplayTag InputTag_Item6;
 
-
+	FGameplayTag Damage;
+	
+	FGameplayTag Effects_HitReact;
 private:
 	static FGOGameplayTags GameplayTags;
 };

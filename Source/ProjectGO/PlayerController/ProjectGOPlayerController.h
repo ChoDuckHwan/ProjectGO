@@ -58,6 +58,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = Input)
 	TObjectPtr<UDA_GOInputConfig> InputConfig;
 
+	UPROPERTY(EditDefaultsOnly, Category = Input)
+	TObjectPtr<UInputAction> ShiftAction;
+
 	virtual void SetupInputComponent() override;
 	
 	// To add mapping context
@@ -93,6 +96,12 @@ private:
 
 	UFUNCTION()
 	TWeakObjectPtr<UGOAbilitySystemComponent> GetGOASC();
+
+
+	void ShiftPressed() { bShiftKeyDown = true; }
+	void ShiftReleased() { bShiftKeyDown = false; }
+
+	bool bShiftKeyDown = false;
 };
 
 

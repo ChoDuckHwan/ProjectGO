@@ -57,6 +57,8 @@ void AProjectGOPlayerController::SetupInputComponent()
 	if(GOInputComponent)
 	{
 		GOInputComponent->BindAbilityActions(InputConfig, this, &ThisClass::AbilityInputTagPressed, &ThisClass::AbilityInputTagReleased, &ThisClass::AbilityInputTagHeld);
+		GOInputComponent->BindAction(ShiftAction, ETriggerEvent::Started, this, &AProjectGOPlayerController::ShiftPressed);
+		GOInputComponent->BindAction(ShiftAction, ETriggerEvent::Completed, this, &AProjectGOPlayerController::ShiftPressed);
 
 		/*Mouse Click Effect*/
 		GOInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Triggered, this, &AProjectGOPlayerController::OnSetDestinationTriggered);

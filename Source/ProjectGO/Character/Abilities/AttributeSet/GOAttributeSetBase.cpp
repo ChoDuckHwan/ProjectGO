@@ -9,6 +9,7 @@
 
 #include "Net/UnrealNetwork.h"
 #include "ProjectGO/GOGameplayTags.h"
+#include "ProjectGO/Interaction/CombatInterface.h"
 
 UGOAttributeSetBase::UGOAttributeSetBase()
 {
@@ -58,7 +59,6 @@ void UGOAttributeSetBase::PostGameplayEffectExecute(const FGameplayEffectModCall
 	FEffectProperties EffectProperties;
 	SetEffectProperties(Data, EffectProperties);
 
-
 	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
 	{
 		SetHealth(FMath::Clamp(GetHealth(), 0.f, GetMaxHealth()));
@@ -66,6 +66,31 @@ void UGOAttributeSetBase::PostGameplayEffectExecute(const FGameplayEffectModCall
 	if (Data.EvaluatedData.Attribute == GetManaAttribute())
 	{
 		SetMana(FMath::Clamp(GetMana(), 0.f, GetMaxMana()));
+	}
+	if(Data.EvaluatedData.Attribute == GetIncomingDamageAttribute())
+	{
+		const float LocalIncomingDamage = GetIncomingDamage();
+		SetIncomingDamage(0.f);
+		if(LocalIncomingDamage > 0.f)
+		{
+			const float NewHealth = GetHealth() - LocalIncomingDamage;
+			SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
+
+			const bool bFatal = NewHealth <= 0.f;
+			if(!bFatal)
+			{
+				FGameplayTagContainer TagContainer;
+				TagContainer.AddTag(FGOGameplayTags::Get().Effects_HitReact);
+				EffectProperties.TargetASC->TryActivateAbilitiesByTag(TagContainer);
+			}
+			else
+			{
+				if(ICombatInterface* CombatInterface = Cast<ICombatInterface>(EffectProperties.TargetAvatarActor))
+				{
+					CombatInterface->Die();
+				}				
+			}
+		}
 	}
 }
 

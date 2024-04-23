@@ -9,6 +9,7 @@
 #include "Components/SphereComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "ProjectGO/GOGameplayTags.h"
 #include "ProjectGO/AI/GOAIController.h"
 #include "ProjectGO/Player/GOPlayerState.h"
 
@@ -93,4 +94,6 @@ void AGOPlayerCharacter::InitializeAbilityValue(AGOPlayerState* PS)
 		GetAbilitySystemComponent()->InitAbilityActorInfo(PS, this);		
 		Super::InitializeAbilityValue(PS);
 	}
+	Super::InitializeAttributes();
+
 }

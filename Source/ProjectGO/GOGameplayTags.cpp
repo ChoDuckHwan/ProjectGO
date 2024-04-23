@@ -51,4 +51,16 @@ void FGOGameplayTags::InitializeNativeGameplayTags()
 	GameplayTags.InputTag_Item5 = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("InputTag.Item5"), FString("5 Item Use Button"));
 	GameplayTags.InputTag_Item6 = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("InputTag.Item6"), FString("6 Item Use Button"));
 
+
+	/*
+	 * Damage
+	 */
+
+	GameplayTags.Damage = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Damage"), FString("Damage"));
+
+
+	/*
+	 * Hit React
+	 */
+	GameplayTags.Effects_HitReact = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Effects.HitReact"), FString("Tag Granted when Hit React"));
 }

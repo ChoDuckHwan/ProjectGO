@@ -15,6 +15,6 @@ void UGOAssetManager::StartInitialLoading()
 UGOAssetManager& UGOAssetManager::Get()
 {
 	check(GEngine);
-	UGOAssetManager* AssetManager = Cast<UGOAssetManager>(GEngine->AssetManager);
+	UGOAssetManager* AssetManager = Cast<UGOAssetManager>(GEngine->AssetManager);	
 	return *AssetManager;
 }

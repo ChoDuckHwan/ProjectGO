@@ -17,12 +17,14 @@ public class ProjectGO : ModuleRules
 				"AIModule",
 				"Niagara",
 				"EnhancedInput",
-				"GameplayTags"
+				"GameplayTags",
+				"MotionWarping"
 			});
 		PrivateDependencyModuleNames.AddRange(new string[]
 		{
 			"GameplayAbilities",
-			"GameplayTasks"
+			"GameplayTasks",
+			"Niagara"
 		});
 
 	}

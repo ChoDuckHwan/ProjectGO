@@ -6,13 +6,18 @@
 #include "GameFramework/GameMode.h"
 #include "ProjectGOGameMode.generated.h"
 
+class UCharacterClassInfo;
+
 UCLASS(minimalapi)
 class AProjectGOGameMode : public AGameMode
 {
-	GENERATED_BODY()
+	GENERATED_BODY()	
 
 public:
 	AProjectGOGameMode();
+
+	UPROPERTY(EditDefaultsOnly, Category = "CharacterClassDefaults")
+	TObjectPtr<UCharacterClassInfo> CharacterClassInfo;
 };
 
 

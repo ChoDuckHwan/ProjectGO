@@ -8,14 +8,18 @@
 #include "ProjectGO/Character/Abilities/GOAbilitySystemComponent.h"
 #include "ProjectGO/Enums/Damage.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "Materials/Material.h"
 #include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "ProjectGO/ProjectGO.h"
 #include "ProjectGO/HUD/InGameHud.h"
 #include "ProjectGO/Player/GOPlayerState.h"
 #include "ProjectGO/PlayerController/ProjectGOPlayerController.h"
+#include "ProjectGO/UI/GOUserWidgetBase.h"
 
 //#include "ProjectGO/UI/Character/UW_CharacterHead.h"
 
@@ -29,6 +33,11 @@ AProjectGOCharacter::AProjectGOCharacter(const FObjectInitializer& ObjectInitial
 	DeadTag = FGameplayTag::RequestGameplayTag(FName("State.Dead"));
 	EffectRemoveOnDeadTag = FGameplayTag::RequestGameplayTag(FName("Effect.RemoveOnDeath"));
 	DeadTag = FGameplayTag::RequestGameplayTag(FName("State.Dead"));
+
+	GetMesh()->SetCollisionResponseToChannel(ECC_Projectile, ECR_Overlap);
+
+	HealthBar_Head = CreateDefaultSubobject<UWidgetComponent>("HealthBar_Head");
+	HealthBar_Head->SetupAttachment(GetRootComponent());
 }
 
 
@@ -44,12 +53,12 @@ int32 AProjectGOCharacter::GetAbilityLevel(EGOAbilityID AbilityID) const
 
 void AProjectGOCharacter::RemoveCharacterAbilities()
 {
-	if(GetLocalRole() != ROLE_Authority || !AbilitySystemComponent.IsValid() || !AbilitySystemComponent->AbilitiesGiven)
+	if (GetLocalRole() != ROLE_Authority || !AbilitySystemComponent.IsValid() || !AbilitySystemComponent->AbilitiesGiven)
 	{
 		return;
 	}
 	TArray<FGameplayAbilitySpecHandle> AbilitiesToRemove;
-	for(const FGameplayAbilitySpec& spec : AbilitySystemComponent->GetActivatableAbilities())
+	for (const FGameplayAbilitySpec& spec : AbilitySystemComponent->GetActivatableAbilities())
 	{
 		/*if((spec.SourceObject == this) && CharacterAbilities.Contains(spec.Ability->GetClass()))
 		{
@@ -57,42 +66,12 @@ void AProjectGOCharacter::RemoveCharacterAbilities()
 		}*/
 	}
 
-	for(int32 i=0; i< AbilitiesToRemove.Num(); ++i)
+	for (int32 i = 0; i < AbilitiesToRemove.Num(); ++i)
 	{
 		AbilitySystemComponent->ClearAbility(AbilitiesToRemove[i]);
 	}
 
 	Cast<UGOAbilitySystemComponent>(AbilitySystemComponent)->AbilitiesGiven = false;
-}
-
-void AProjectGOCharacter::Die()
-{
-	RemoveCharacterAbilities();
-
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	GetCharacterMovement()->GravityScale = 0;
-	GetCharacterMovement()->Velocity = FVector(0);
-
-	OnCharacterDied.Broadcast(this);
-
-	if(AbilitySystemComponent.IsValid())
-	{
-		AbilitySystemComponent->CancelAbilities();
-
-		FGameplayTagContainer EffectTagToRemove;
-		EffectTagToRemove.AddTag(EffectRemoveOnDeadTag);
-		int32 NumEffectsRemoved = AbilitySystemComponent->RemoveActiveEffectsWithTags(EffectTagToRemove);
-		AbilitySystemComponent->AddLooseGameplayTag(DeadTag);
-	}
-
-	if(DeathMontage)
-	{
-		PlayAnimMontage(DeathMontage);
-	}
-	else
-	{
-		FinishDying();
-	}
 }
 
 void AProjectGOCharacter::FinishDying()
@@ -102,19 +81,19 @@ void AProjectGOCharacter::FinishDying()
 
 void AProjectGOCharacter::Tick(float DeltaSeconds)
 {
-    Super::Tick(DeltaSeconds);
+	Super::Tick(DeltaSeconds);
 }
 
 void AProjectGOCharacter::OnRep_PlayerState()
 {
-	Super::OnRep_PlayerState();	
+	Super::OnRep_PlayerState();
 }
 
 void AProjectGOCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	if(GetNetMode() != NM_DedicatedServer)
-	{		
+	if (GetNetMode() != NM_DedicatedServer)
+	{
 		BindMouseCursorEvent();
 	}
 }
@@ -124,23 +103,71 @@ UAbilitySystemComponent* AProjectGOCharacter::GetAbilitySystemComponent() const
 	return AbilitySystemComponent.Get();
 }
 
+UAnimMontage* AProjectGOCharacter::GetHitReactMontage_Implementation()
+{
+	return HitReactMontage;
+}
+
 void AProjectGOCharacter::InitializeAbilityValue(AGOPlayerState* PS)
 {
 	if (!AbilitySystemComponent.IsValid() || !AttributeSetBase.IsValid())
 	{
 		UE_LOG(LogTemp, Error, TEXT("AbilitySystemComponent, AttributeSetBase Is Not Valid"));
+		return;
 	}
-	BindAttributes();
-	AbilitySystemComponent->SetTagMapCount(DeadTag, 0);
-	InitializeAttributes();
+	
 	AbilitySystemComponent->AbilityActorInfoSet();
 
-	if(AProjectGOPlayerController* GOPlayerController = Cast<AProjectGOPlayerController>(GetController()))
+	if (!HasAuthority())
 	{
-		if(AInGameHud* InGameHud = Cast<AInGameHud>(GOPlayerController->GetHUD()))
+		if (AProjectGOPlayerController* GOPlayerController = Cast<AProjectGOPlayerController>(GetController()))
+		{	
+			if (AInGameHud* InGameHud = Cast<AInGameHud>(GOPlayerController->GetHUD()))
+			{
+				InGameHud->InitOverlay(GOPlayerController, GetPlayerState(), AbilitySystemComponent.Get(), AttributeSetBase.Get());
+			}
+		}	
+
+		if(!GetPlayerState())
 		{
-			InGameHud->InitOverlay(GOPlayerController, GetPlayerState(), AbilitySystemComponent.Get(), AttributeSetBase.Get());			
+			//Moster
+			HealthBar_Head->SetWidgetClass(EnemyHealthBar_HeadClass);
 		}
+		else
+		{
+			//After check team number, separate character health bar. 
+			if (const APlayerController* LocalController = UGameplayStatics::GetPlayerController(this, 0))
+			{
+				if(LocalController->PlayerState == PS)
+				{
+					//My
+					HealthBar_Head->SetWidgetClass(MyHealthBar_HeadClass);
+				}
+				else
+				{
+					//Enemy
+					HealthBar_Head->SetWidgetClass(EnemyHealthBar_HeadClass);
+				}
+			}
+		}
+
+		if (UGOUserWidgetBase* HeadWidget = Cast<UGOUserWidgetBase>(HealthBar_Head->GetUserWidgetObject()))
+		{
+			HeadWidget->SetWidgetController(this);
+			UE_LOG(LogTemp, Error, TEXT("HeadWidget, SetWidgetController Called"));
+		}
+		
+		AbilitySystemComponent.Get()->GetGameplayAttributeValueChangeDelegate(AttributeSetBase.Get()->GetMaxHealthAttribute()).AddLambda([&](const FOnAttributeChangeData& Data)
+			{
+				MaxHealthChangedSignature.Broadcast(Data.NewValue);
+			});
+		AbilitySystemComponent.Get()->GetGameplayAttributeValueChangeDelegate(AttributeSetBase.Get()->GetHealthAttribute()).AddLambda([&](const FOnAttributeChangeData& Data)
+			{
+				HealthChangedSignature.Broadcast(Data.NewValue);
+			});
+		MaxHealthChangedSignature.Broadcast(AttributeSetBase.Get()->GetMaxHealth());
+		HealthChangedSignature.Broadcast(AttributeSetBase.Get()->GetHealth());
+
 	}
 }
 
@@ -165,7 +192,7 @@ void AProjectGOCharacter::InitializeAttributes() const
 	ApplyEffectToSelf(DefaultSeceondaryAttributes, 1.0f);
 
 	//In DefaultSeceondaryAttributes set vital max value so after call DefaultVitalAttributes apply
-	ApplyEffectToSelf(DefaultVitalAttributes, 1.0f);	
+	ApplyEffectToSelf(DefaultVitalAttributes, 1.0f);
 }
 
 void AProjectGOCharacter::AddStartupEffects()
@@ -178,7 +205,7 @@ void AProjectGOCharacter::AddStartupEffects()
 	FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
 	EffectContext.AddSourceObject(this);
 
-	for(TSubclassOf<UGameplayEffect> GameplayEffect : StartupEffects)
+	for (TSubclassOf<UGameplayEffect> GameplayEffect : StartupEffects)
 	{
 		FGameplayEffectSpecHandle NewHandle = AbilitySystemComponent->MakeOutgoingSpec(GameplayEffect, ICombatInterface::GetLevel(), EffectContext);
 		if (NewHandle.IsValid())
@@ -216,7 +243,7 @@ UGOAttributeSetBase* AProjectGOCharacter::GetAttributeSetBase() const
 
 void AProjectGOCharacter::BindAttributes()
 {
-	
+
 }
 
 void AProjectGOCharacter::StunTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
@@ -238,4 +265,56 @@ void AProjectGOCharacter::BindMouseCursorEvent()
 	OnClicked.AddDynamic(this, &AProjectGOCharacter::CharacterOnClicked);
 	OnBeginCursorOver.AddDynamic(this, &AProjectGOCharacter::CharacterCursorBeginOvered);
 	OnEndCursorOver.AddDynamic(this, &AProjectGOCharacter::CharacterCursorEndOvered);
+}
+void AProjectGOCharacter::Die()
+{
+	/*
+	RemoveCharacterAbilities();
+
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetCharacterMovement()->GravityScale = 0;
+	GetCharacterMovement()->Velocity = FVector(0);
+
+	OnCharacterDied.Broadcast(this);
+
+	if (AbilitySystemComponent.IsValid())
+	{
+		AbilitySystemComponent->CancelAbilities();
+
+		FGameplayTagContainer EffectTagToRemove;
+		EffectTagToRemove.AddTag(EffectRemoveOnDeadTag);
+		int32 NumEffectsRemoved = AbilitySystemComponent->RemoveActiveEffectsWithTags(EffectTagToRemove);
+		AbilitySystemComponent->AddLooseGameplayTag(DeadTag);
+	}
+
+	if (DeathMontage)
+	{
+		PlayAnimMontage(DeathMontage);
+	}
+	else
+	{
+		FinishDying();
+	}	 
+	*/
+	MulticastHandleDeath();
+}
+
+void AProjectGOCharacter::MulticastHandleDeath_Implementation()
+{
+	//if have weapon
+	//weapon->setsimulatephysics / weapon->setenablegravity / weapon->setcollisionenabled(physicsonly)
+
+	GetMesh()->SetEnableGravity(true);
+	GetMesh()->SetSimulatePhysics(true);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+	GetMesh()->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetCharacterMovement()->Velocity = FVector(0);
+	OnCharacterDied.Broadcast(this);
+
+	if(!HasAuthority())
+	{
+		HealthBar_Head->SetVisibility(false);
+	}
 }

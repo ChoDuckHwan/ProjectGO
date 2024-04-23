@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "ProjectGO/Character/ProjectGOCharacter.h"
 #include "ProjectGO/Interaction/MonsterInterface.h"
+#include "ProjectGO/Character/Abilities/Data/CharacterClassInfo.h"
 #include "ProjectGOMonster.generated.h"
 
 /**
@@ -15,10 +16,9 @@ class PROJECTGO_API AProjectGOMonster : public AProjectGOCharacter, public IMons
 {
 	GENERATED_BODY()
 private:
-	UPROPERTY(EditAnywhere, Category = "Character Class Defaults", ReplicatedUsing = OnRep_Level)
-	int32 Level = 1;
 
-protected:
+protected:	
+
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UGOAbilitySystemComponent> MonsterAbilitySystemComponent;
 
@@ -26,9 +26,16 @@ protected:
 	TObjectPtr<class UGOAttributeSetBase> MonsterAttributeSetBase;
 
 	virtual void InitializeAbilityValue(AGOPlayerState* PS) override;
+	virtual void InitializeAttributes() const override;
 
 	UFUNCTION()
 	virtual void OnRep_Level(const int32& oldLevel);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Class Defaults", ReplicatedUsing = OnRep_Level)
+	int32 Level = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Class Defaults")
+	ECharacterClass MonsterClass = ECharacterClass::Warrior;
 public:
 	AProjectGOMonster(const class FObjectInitializer& ObjectInitializer);
 
@@ -36,8 +43,18 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
 
+
 	/* Combat Interface*/
 	virtual int32 GetLevel() override;
 	/* Combat Interface*/
-	
+
+	void HitReactTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Combat")
+	bool bHitReacting = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Combat")
+	float BaseWalkSpeed = 250.f;
+
+	virtual void Die() override;
 };

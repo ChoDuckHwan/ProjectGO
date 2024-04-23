@@ -15,3 +15,7 @@ FVector ICombatInterface::GetCombatSocketLocation()
 	return FVector();
 }
 
+void ICombatInterface::Die()
+{
+}
+

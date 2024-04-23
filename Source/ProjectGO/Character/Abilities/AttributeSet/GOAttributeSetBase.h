@@ -133,7 +133,16 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Damage")
 	FGameplayAttributeData Damage;
 	ATTRIBUTE_ACCESSORS(UGOAttributeSetBase, Damage)
-		
+
+
+	/*
+	 *	Meta Attributes
+	 */
+	//Meta Attributes only uses server.
+	UPROPERTY(BlueprintReadOnly, Category="Meta Attributes")
+	FGameplayAttributeData IncomingDamage;
+	ATTRIBUTE_ACCESSORS(UGOAttributeSetBase, IncomingDamage)
+
 	UFUNCTION(BlueprintCallable)
 	virtual void OnRep_Health(const FGameplayAttributeData& OldHealth);
 	UFUNCTION(BlueprintCallable)

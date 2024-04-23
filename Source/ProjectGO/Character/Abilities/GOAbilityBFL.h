@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "ProjectGO/Character/Abilities/Data/CharacterClassInfo.h"
 #include "GOAbilityBFL.generated.h"
 
 class UOverlayWidgetController;
@@ -21,4 +22,10 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "AbilitySystemLibrary|WidgetController")
 	static UGOAttributeWidgetController* GetAttributeWidgetController(const UObject* WorldContextObject);
+
+	UFUNCTION(BlueprintCallable, Category = "AbilitySystemLibrary|CharacterClassDefaults")
+	static void InitializeDefaultAttributes(const UObject* WorldContextObject, ECharacterClass CharacterClass, float Level, UAbilitySystemComponent* ASC);
+
+	UFUNCTION(BlueprintCallable, Category = "AbilitySystemLibrary|CharacterClassDefaults")
+	static void GiveStartupAbilities(const UObject* WorldContextObject, UAbilitySystemComponent* ASC);
 };

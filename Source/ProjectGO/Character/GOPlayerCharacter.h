@@ -32,6 +32,7 @@ public:
 	/* Combat Interface*/
 	virtual int32 GetLevel() override;
 	/* Combat Interface*/
+
 protected:
 	virtual void InitializeAbilityValue(AGOPlayerState* PS) override;
 private:
