@@ -120,6 +120,25 @@ public:
 	ATTRIBUTE_ACCESSORS(UGOAttributeSetBase, MaxMana)
 
 	/*
+	 *	Resistance Attributes
+	 */
+	UPROPERTY(BlueprintReadOnly, Category = "Resistance Attributes", ReplicatedUsing = OnRep_FireResistance)
+	FGameplayAttributeData FireResistance;
+	ATTRIBUTE_ACCESSORS(UGOAttributeSetBase, FireResistance)
+
+	UPROPERTY(BlueprintReadOnly, Category = "Resistance Attributes", ReplicatedUsing = OnRep_LightningResistance)
+	FGameplayAttributeData LightningResistance;
+	ATTRIBUTE_ACCESSORS(UGOAttributeSetBase, LightningResistance)
+
+	UPROPERTY(BlueprintReadOnly, Category = "Resistance Attributes", ReplicatedUsing = OnRep_ArcaneResistance)
+	FGameplayAttributeData ArcaneResistance;
+	ATTRIBUTE_ACCESSORS(UGOAttributeSetBase, ArcaneResistance)
+
+	UPROPERTY(BlueprintReadOnly, Category = "Resistance Attributes", ReplicatedUsing = OnRep_PhysicalResistance)
+	FGameplayAttributeData PhysicalResistance;
+	ATTRIBUTE_ACCESSORS(UGOAttributeSetBase, PhysicalResistance)
+	
+	/*
 	 *Vital Attributes
 	 */
 	UPROPERTY(BlueprintReadOnly, Category = "Vital Attributes", ReplicatedUsing = OnRep_Health)
@@ -181,6 +200,17 @@ public:
 	virtual void OnRep_BlockChance(const FGameplayAttributeData& oldBlockChance);
 	virtual void GetLifetimeReplicatedProps(TArray< class FLifetimeProperty >& OutLifetimeProps) const override;
 
+	UFUNCTION(BlueprintCallable)
+	virtual void OnRep_FireResistance(const FGameplayAttributeData& oldFireResistance);
+	UFUNCTION(BlueprintCallable)
+	virtual void OnRep_LightningResistance(const FGameplayAttributeData& oldLightningResistance);
+	UFUNCTION(BlueprintCallable)
+	virtual void OnRep_ArcaneResistance(const FGameplayAttributeData& oldArcaneResistance);
+	UFUNCTION(BlueprintCallable)
+	virtual void OnRep_PhysicalResistance(const FGameplayAttributeData& oldPhysicalResistance);
+
+	
 private:
 	void SetEffectProperties(const FGameplayEffectModCallbackData& Data, FEffectProperties& Props) const;
+	void ShowFloatText(const FEffectProperties& Properties, float HitDamage, bool bBlockedHit, bool bCriticalHit) const;
 };

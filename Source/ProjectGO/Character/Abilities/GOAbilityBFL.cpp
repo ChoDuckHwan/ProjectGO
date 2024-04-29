@@ -2,6 +2,8 @@
 
 
 #include "ProjectGO/Character/Abilities/GOAbilityBFL.h"
+
+#include "GOAbilityTypes.h"
 #include "Kismet/GameplayStatics.h"
 #include "ProjectGO/GameMode/ProjectGOGameMode.h"
 #include "ProjectGO/HUD/InGameHud.h"
@@ -38,10 +40,7 @@ UGOAttributeWidgetController* UGOAbilityBFL::GetAttributeWidgetController(const 
 
 void UGOAbilityBFL::InitializeDefaultAttributes(const UObject* WorldContextObject, ECharacterClass CharacterClass, float Level, UAbilitySystemComponent* ASC)
 {
-	const AProjectGOGameMode* GameMode = Cast<AProjectGOGameMode>(UGameplayStatics::GetGameMode(WorldContextObject));
-	if (!GameMode || !ASC) return;
-
-	UCharacterClassInfo* CharacterClassInfo = GameMode->CharacterClassInfo;
+	UCharacterClassInfo* CharacterClassInfo = GetCharacterClassInfo(WorldContextObject);
 	if (!CharacterClassInfo) return;
 
 	AActor* AvatorActor = ASC->GetAvatarActor();
@@ -64,14 +63,54 @@ void UGOAbilityBFL::InitializeDefaultAttributes(const UObject* WorldContextObjec
 }
 
 void UGOAbilityBFL::GiveStartupAbilities(const UObject* WorldContextObject, UAbilitySystemComponent* ASC)
-{
-	const AProjectGOGameMode* GameMode = Cast<AProjectGOGameMode>(UGameplayStatics::GetGameMode(WorldContextObject));
-	if (!GameMode || !ASC) return;
-
-	UCharacterClassInfo* CharacterClassInfo = GameMode->CharacterClassInfo;
+{	
+	UCharacterClassInfo* CharacterClassInfo = GetCharacterClassInfo(WorldContextObject);
+	if(!CharacterClassInfo) return;
 	for(const auto& Abilitiy : CharacterClassInfo->Abilities)
 	{
 		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(Abilitiy, 1);
 		ASC->GiveAbility(AbilitySpec);
 	}
+}
+
+UCharacterClassInfo* UGOAbilityBFL::GetCharacterClassInfo(const UObject* WorldContextObject)
+{
+	const AProjectGOGameMode* GameMode = Cast<AProjectGOGameMode>(UGameplayStatics::GetGameMode(WorldContextObject));
+	if (!GameMode) return nullptr;
+
+	return GameMode->CharacterClassInfo;
+}
+
+bool UGOAbilityBFL::IsBlockedHit(const FGameplayEffectContextHandle& EffectContext)
+{
+	if(const FGOGameplayEffectContext* GOGameplayEffectContext = static_cast<const FGOGameplayEffectContext*>(EffectContext.Get()))
+	{
+		return GOGameplayEffectContext->IsBlockedHit();
+	}
+	return false;
+}
+
+bool UGOAbilityBFL::IsCriticalHit(const FGameplayEffectContextHandle& EffectContext)
+{
+	if(const FGOGameplayEffectContext* GOGameplayEffectContext = static_cast<const FGOGameplayEffectContext*>(EffectContext.Get()))
+	{
+		return GOGameplayEffectContext->IsCriticalHit();
+	}
+	return false;
+}
+
+void UGOAbilityBFL::SetIsBlockedHit(FGameplayEffectContextHandle& EffectContext, bool InIsBlockedHit)
+{
+	if(FGOGameplayEffectContext* GOGameplayEffectContext = static_cast<FGOGameplayEffectContext*>(EffectContext.Get()))
+	{
+		GOGameplayEffectContext->SetIsBlockedHit(InIsBlockedHit);
+	}
+}
+
+void UGOAbilityBFL::SetIsCriticalHit(FGameplayEffectContextHandle& EffectContext, bool bInIsCriticalHit)
+{
+	if(FGOGameplayEffectContext* GOGameplayEffectContext = static_cast<FGOGameplayEffectContext*>(EffectContext.Get()))
+    	{
+    		GOGameplayEffectContext->SetIsCriticalHit(bInIsCriticalHit);
+    	}
 }

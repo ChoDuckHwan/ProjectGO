@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GODamageGameplayAbility.h"
 #include "GOGameplayAbilityBase.h"
 #include "GOProjectileSpell.generated.h"
 
@@ -12,7 +13,7 @@ class AGOProjectile;
  * 
  */
 UCLASS()
-class PROJECTGO_API UGOProjectileSpell : public UGOGameplayAbilityBase
+class PROJECTGO_API UGOProjectileSpell : public UGODamageGameplayAbility
 {
 	GENERATED_BODY()
 

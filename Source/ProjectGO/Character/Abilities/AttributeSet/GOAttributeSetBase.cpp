@@ -6,10 +6,13 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "GameplayEffectExtension.h"
 #include "GameFramework/Character.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "Net/UnrealNetwork.h"
 #include "ProjectGO/GOGameplayTags.h"
+#include "ProjectGO/Character/Abilities/GOAbilityBFL.h"
 #include "ProjectGO/Interaction/CombatInterface.h"
+#include "ProjectGO/PlayerController/ProjectGOPlayerController.h"
 
 UGOAttributeSetBase::UGOAttributeSetBase()
 {
@@ -34,6 +37,11 @@ UGOAttributeSetBase::UGOAttributeSetBase()
 	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_MaxHealth, GetMaxHealthAttribute);
 	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_MaxMana, GetMaxManaAttribute);
 
+	/* resistance attributes */
+	TagsToAttributes.Add(GameplayTags.Attributes_Resistance_Arcane, GetArcaneResistanceAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Resistance_Fire, GetFireResistanceAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Resistance_Lightning, GetLightningResistanceAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Resistance_Physical, GetPhysicalResistanceAttribute);
 
 }
 
@@ -55,6 +63,7 @@ void UGOAttributeSetBase::PreAttributeChange(const FGameplayAttribute& Attribute
 
 void UGOAttributeSetBase::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
+	//only server
 	Super::PostGameplayEffectExecute(Data);
 	FEffectProperties EffectProperties;
 	SetEffectProperties(Data, EffectProperties);
@@ -90,6 +99,10 @@ void UGOAttributeSetBase::PostGameplayEffectExecute(const FGameplayEffectModCall
 					CombatInterface->Die();
 				}				
 			}
+			bool bBlocked = UGOAbilityBFL::IsBlockedHit(EffectProperties.GameplayEffectContextHandle); 
+			bool bCriticalHit = UGOAbilityBFL::IsCriticalHit(EffectProperties.GameplayEffectContextHandle); 
+
+			ShowFloatText(EffectProperties, LocalIncomingDamage, bBlocked, bCriticalHit);
 		}
 	}
 }
@@ -194,12 +207,36 @@ void UGOAttributeSetBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	DOREPLIFETIME_CONDITION_NOTIFY(UGOAttributeSetBase, ManaRegeneration, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UGOAttributeSetBase, BlockChance, COND_None, REPNOTIFY_Always);
 
-
 	DOREPLIFETIME_CONDITION_NOTIFY(UGOAttributeSetBase, Strength, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UGOAttributeSetBase, Intelligence, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UGOAttributeSetBase, Resilience, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UGOAttributeSetBase, Vigor, COND_None, REPNOTIFY_Always);
 
+	DOREPLIFETIME_CONDITION_NOTIFY(UGOAttributeSetBase, FireResistance, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UGOAttributeSetBase, LightningResistance, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UGOAttributeSetBase, ArcaneResistance, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UGOAttributeSetBase, PhysicalResistance, COND_None, REPNOTIFY_Always);
+
+}
+
+void UGOAttributeSetBase::OnRep_FireResistance(const FGameplayAttributeData& oldFireResistance)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UGOAttributeSetBase, FireResistance, oldFireResistance);
+}
+
+void UGOAttributeSetBase::OnRep_LightningResistance(const FGameplayAttributeData& oldLightningResistance)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UGOAttributeSetBase, LightningResistance, oldLightningResistance);
+}
+
+void UGOAttributeSetBase::OnRep_ArcaneResistance(const FGameplayAttributeData& oldArcaneResistance)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UGOAttributeSetBase, ArcaneResistance, oldArcaneResistance);
+}
+
+void UGOAttributeSetBase::OnRep_PhysicalResistance(const FGameplayAttributeData& oldPhysicalResistance)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UGOAttributeSetBase, PhysicalResistance, oldPhysicalResistance);
 }
 
 void UGOAttributeSetBase::SetEffectProperties(const FGameplayEffectModCallbackData& Data, FEffectProperties& Props) const
@@ -230,5 +267,16 @@ void UGOAttributeSetBase::SetEffectProperties(const FGameplayEffectModCallbackDa
 		Props.TargetController = Data.Target.AbilityActorInfo->PlayerController.Get();
 		Props.TargetCharacter = Cast<ACharacter>(Props.TargetAvatarActor);
 		Props.TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Props.TargetAvatarActor);
+	}
+}
+
+void UGOAttributeSetBase::ShowFloatText(const FEffectProperties& Properties, float HitDamage, bool bBlockedHit, bool bCriticalHit) const
+{
+	if (Properties.SourceCharacter != Properties.TargetCharacter)
+	{		
+		if (AProjectGOPlayerController* PC = Cast<AProjectGOPlayerController>(Properties.SourceCharacter->GetController()))
+		{
+			PC->ShowDamageNumber(HitDamage, Properties.TargetCharacter, bBlockedHit, bCriticalHit);
+		}
 	}
 }

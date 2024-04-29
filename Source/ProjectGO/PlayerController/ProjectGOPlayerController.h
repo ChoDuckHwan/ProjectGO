@@ -14,6 +14,7 @@ class UInputMappingContext;
 class UInputAction;
 class UDA_GOInputConfig;
 class UGOAbilitySystemComponent;
+class UDamageTextComponent;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -50,6 +51,10 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	const bool& GetConsumeMove() const;
+
+	UFUNCTION(Client, Reliable)
+	void ShowDamageNumber(float DamageAmount, ACharacter* TargetCharacter, bool bBlockedHit, bool bCriticalHit);
+	void ShowDamageNumber_Implementation(float DamageAmount, ACharacter* TargetCharacter, bool bBlockedHit, bool bCriticalHit);
 
 protected:
 	/** True if the controlled character should navigate to the mouse cursor. */
@@ -102,6 +107,9 @@ private:
 	void ShiftReleased() { bShiftKeyDown = false; }
 
 	bool bShiftKeyDown = false;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UDamageTextComponent> DamageTextComponentClass;
 };
 
 

@@ -13,12 +13,12 @@
 
 class UGOAbilitySystemComponent;
 class UGOAttributeSetBase;
-class UWidgetComponent;
 class AGOPlayerState;
+class UGOWidgetComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCharacterDiedDelegate, AProjectGOCharacter*, Character);
 
-UCLASS(Blueprintable)
+UCLASS(Blueprintable, BlueprintType)
 class AProjectGOCharacter : public ACharacter, public IAbilitySystemInterface, public ICombatInterface
 {
 	GENERATED_BODY()
@@ -104,7 +104,7 @@ protected:
 	TArray<TSubclassOf<class UGameplayEffect>> StartupEffects;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, category = "UI|WidgetComponent")
-	TObjectPtr<UWidgetComponent> HealthBar_Head;
+	TObjectPtr<UGOWidgetComponent> HealthBar_CharacterHead;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, category = "UI|HeadInfo")
 	TSubclassOf<UUserWidget> MyHealthBar_HeadClass;

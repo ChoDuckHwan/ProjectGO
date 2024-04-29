@@ -12,8 +12,10 @@
 #include "Engine/World.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
+#include "GameFramework/Character.h"
 #include "ProjectGO/Character/Abilities/GOAbilitySystemComponent.h"
 #include "ProjectGO/Player/GOPlayerState.h"
+#include "ProjectGO/UI/Widget/DamageTextComponent.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -45,6 +47,18 @@ void AProjectGOPlayerController::SetConsumeMove(const bool& NewComsumeMove)
 const bool& AProjectGOPlayerController::GetConsumeMove() const
 {
 	return bConsumeMove;
+}
+
+void AProjectGOPlayerController::ShowDamageNumber_Implementation(float DamageAmount, ACharacter* TargetCharacter, bool bBlockedHit, bool bCriticalHit)
+{
+	if (!IsValid(TargetCharacter) || !DamageTextComponentClass || HasAuthority()) return;
+
+	UDamageTextComponent* DamageTextComponent = NewObject<UDamageTextComponent>(TargetCharacter, DamageTextComponentClass);
+	DamageTextComponent->RegisterComponent();
+	DamageTextComponent->AttachToComponent(TargetCharacter->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+	DamageTextComponent->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+
+	DamageTextComponent->SetDamageText(DamageAmount, bBlockedHit, bCriticalHit);
 }
 
 void AProjectGOPlayerController::SetupInputComponent()

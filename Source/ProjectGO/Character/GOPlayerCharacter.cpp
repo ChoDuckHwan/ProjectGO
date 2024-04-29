@@ -73,7 +73,7 @@ void AGOPlayerCharacter::OnRep_PlayerState()
 	InitializeAbilityValue(PS);
 }
 
-int32 AGOPlayerCharacter::GetLevel()
+int32 AGOPlayerCharacter::GetLevel() const
 {
 	check(GetPlayerState<AGOPlayerState>());
 	return GetPlayerState<AGOPlayerState>()->GetPlayerLevel();	
@@ -91,9 +91,8 @@ void AGOPlayerCharacter::InitializeAbilityValue(AGOPlayerState* PS)
 			UE_LOG(LogTemp, Error, TEXT("AbilitySystemComponent, AttributeSetBase Is Not Valid"));
 			return;
 		}
-		GetAbilitySystemComponent()->InitAbilityActorInfo(PS, this);		
+		GetAbilitySystemComponent()->InitAbilityActorInfo(PS, this);
 		Super::InitializeAbilityValue(PS);
+		Super::InitializeAttributes();
 	}
-	Super::InitializeAttributes();
-
 }

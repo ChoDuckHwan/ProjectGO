@@ -14,12 +14,13 @@
 #include "Materials/Material.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
-#include "Net/UnrealNetwork.h"
+#include "Framework/Application/SlateApplication.h"
 #include "ProjectGO/ProjectGO.h"
 #include "ProjectGO/HUD/InGameHud.h"
 #include "ProjectGO/Player/GOPlayerState.h"
 #include "ProjectGO/PlayerController/ProjectGOPlayerController.h"
 #include "ProjectGO/UI/GOUserWidgetBase.h"
+#include "ProjectGO/UI/Widget/GOWidgetComponent.h"
 
 //#include "ProjectGO/UI/Character/UW_CharacterHead.h"
 
@@ -36,8 +37,8 @@ AProjectGOCharacter::AProjectGOCharacter(const FObjectInitializer& ObjectInitial
 
 	GetMesh()->SetCollisionResponseToChannel(ECC_Projectile, ECR_Overlap);
 
-	HealthBar_Head = CreateDefaultSubobject<UWidgetComponent>("HealthBar_Head");
-	HealthBar_Head->SetupAttachment(GetRootComponent());
+	HealthBar_CharacterHead = CreateDefaultSubobject<UGOWidgetComponent>("HealthBar_Head");
+	HealthBar_CharacterHead->SetupAttachment(GetRootComponent());
 }
 
 
@@ -53,7 +54,8 @@ int32 AProjectGOCharacter::GetAbilityLevel(EGOAbilityID AbilityID) const
 
 void AProjectGOCharacter::RemoveCharacterAbilities()
 {
-	if (GetLocalRole() != ROLE_Authority || !AbilitySystemComponent.IsValid() || !AbilitySystemComponent->AbilitiesGiven)
+	if (GetLocalRole() != ROLE_Authority || !AbilitySystemComponent.IsValid() || !AbilitySystemComponent->
+		AbilitiesGiven)
 	{
 		return;
 	}
@@ -112,62 +114,51 @@ void AProjectGOCharacter::InitializeAbilityValue(AGOPlayerState* PS)
 {
 	if (!AbilitySystemComponent.IsValid() || !AttributeSetBase.IsValid())
 	{
-		UE_LOG(LogTemp, Error, TEXT("AbilitySystemComponent, AttributeSetBase Is Not Valid"));
+		UE_LOG(LogTemp, Error, TEXT("&&& AbilitySystemComponent, AttributeSetBase Is Not Valid"));
 		return;
 	}
-	
-	AbilitySystemComponent->AbilityActorInfoSet();
 
 	if (!HasAuthority())
 	{
-		if (AProjectGOPlayerController* GOPlayerController = Cast<AProjectGOPlayerController>(GetController()))
-		{	
-			if (AInGameHud* InGameHud = Cast<AInGameHud>(GOPlayerController->GetHUD()))
+		HealthBar_CharacterHead->WidgetCreateFinished.AddLambda([&](UUserWidget* CreatedWidget)
+		{
+			if (UGOUserWidgetBase* HeadWidget = Cast<UGOUserWidgetBase>(CreatedWidget))
 			{
-				InGameHud->InitOverlay(GOPlayerController, GetPlayerState(), AbilitySystemComponent.Get(), AttributeSetBase.Get());
+				HeadWidget->SetWidgetController(this);
+				MaxHealthChangedSignature.Broadcast(AttributeSetBase.Get()->GetMaxHealth());
+				HealthChangedSignature.Broadcast(AttributeSetBase.Get()->GetHealth());
 			}
-		}	
-
-		if(!GetPlayerState())
-		{
-			//Moster
-			HealthBar_Head->SetWidgetClass(EnemyHealthBar_HeadClass);
-		}
-		else
-		{
-			//After check team number, separate character health bar. 
-			if (const APlayerController* LocalController = UGameplayStatics::GetPlayerController(this, 0))
-			{
-				if(LocalController->PlayerState == PS)
-				{
-					//My
-					HealthBar_Head->SetWidgetClass(MyHealthBar_HeadClass);
-				}
-				else
-				{
-					//Enemy
-					HealthBar_Head->SetWidgetClass(EnemyHealthBar_HeadClass);
-				}
-			}
-		}
-
-		if (UGOUserWidgetBase* HeadWidget = Cast<UGOUserWidgetBase>(HealthBar_Head->GetUserWidgetObject()))
-		{
-			HeadWidget->SetWidgetController(this);
-			UE_LOG(LogTemp, Error, TEXT("HeadWidget, SetWidgetController Called"));
-		}
+			//UE_LOG(LogTemp, Error, TEXT("&&& HeadWidget Name ::: %s , [Simulated ::: %s]"), *GetNameSafe(CreatedWidget),*GetNameSafe(this));
+		});
 		
 		AbilitySystemComponent.Get()->GetGameplayAttributeValueChangeDelegate(AttributeSetBase.Get()->GetMaxHealthAttribute()).AddLambda([&](const FOnAttributeChangeData& Data)
-			{
-				MaxHealthChangedSignature.Broadcast(Data.NewValue);
-			});
+		{
+			MaxHealthChangedSignature.Broadcast(Data.NewValue);
+		});
 		AbilitySystemComponent.Get()->GetGameplayAttributeValueChangeDelegate(AttributeSetBase.Get()->GetHealthAttribute()).AddLambda([&](const FOnAttributeChangeData& Data)
+		{
+			HealthChangedSignature.Broadcast(Data.NewValue);
+		});
+		
+		APlayerController* LPC = UGameplayStatics::GetPlayerController(this, 0);
+		//After check team number, separate character health bar. 
+		if (LPC)
+		{
+			if (LPC->PlayerState == nullptr || LPC->PlayerState != PS)
 			{
-				HealthChangedSignature.Broadcast(Data.NewValue);
-			});
-		MaxHealthChangedSignature.Broadcast(AttributeSetBase.Get()->GetMaxHealth());
-		HealthChangedSignature.Broadcast(AttributeSetBase.Get()->GetHealth());
-
+				//Enemy Or MyTeamPlayerCharacter
+				HealthBar_CharacterHead->SetWidgetClass(EnemyHealthBar_HeadClass);
+			}
+			if (LPC->PlayerState == PS && LPC->PlayerState)
+			{
+				//My
+				HealthBar_CharacterHead->SetWidgetClass(MyHealthBar_HeadClass);
+				if (AInGameHud* InGameHud = Cast<AInGameHud>(LPC->GetHUD()))
+				{
+					InGameHud->InitOverlay(LPC, GetPlayerState(), AbilitySystemComponent.Get(), AttributeSetBase.Get());
+				}
+			}
+		}
 	}
 }
 
@@ -188,16 +179,20 @@ void AProjectGOCharacter::AddCharacterAbilities()
 
 void AProjectGOCharacter::InitializeAttributes() const
 {
+	if (!HasAuthority()) return;
 	ApplyEffectToSelf(DefaultAttributes, 1.0f);
 	ApplyEffectToSelf(DefaultSeceondaryAttributes, 1.0f);
 
 	//In DefaultSeceondaryAttributes set vital max value so after call DefaultVitalAttributes apply
 	ApplyEffectToSelf(DefaultVitalAttributes, 1.0f);
+
+	AbilitySystemComponent->AbilityActorInfoSet();
 }
 
 void AProjectGOCharacter::AddStartupEffects()
 {
-	if (GetLocalRole() != ROLE_Authority || !AbilitySystemComponent.IsValid() || Cast<UGOAbilitySystemComponent>(AbilitySystemComponent)->StartupEffectsApplied)
+	if (GetLocalRole() != ROLE_Authority || !AbilitySystemComponent.IsValid() || Cast<
+		UGOAbilitySystemComponent>(AbilitySystemComponent)->StartupEffectsApplied)
 	{
 		return;
 	}
@@ -207,10 +202,12 @@ void AProjectGOCharacter::AddStartupEffects()
 
 	for (TSubclassOf<UGameplayEffect> GameplayEffect : StartupEffects)
 	{
-		FGameplayEffectSpecHandle NewHandle = AbilitySystemComponent->MakeOutgoingSpec(GameplayEffect, ICombatInterface::GetLevel(), EffectContext);
+		FGameplayEffectSpecHandle NewHandle = AbilitySystemComponent->MakeOutgoingSpec(
+			GameplayEffect, ICombatInterface::GetLevel(), EffectContext);
 		if (NewHandle.IsValid())
 		{
-			FActiveGameplayEffectHandle ActiveHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*NewHandle.Data.Get(), AbilitySystemComponent.Get());
+			FActiveGameplayEffectHandle ActiveHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(
+				*NewHandle.Data.Get(), AbilitySystemComponent.Get());
 		}
 	}
 	Cast<UGOAbilitySystemComponent>(AbilitySystemComponent)->StartupEffectsApplied = true;
@@ -224,12 +221,14 @@ void AProjectGOCharacter::ApplyEffectToSelf(TSubclassOf<UGameplayEffect> Gamepla
 	}
 	if (!GameplayEffectClass)
 	{
-		UE_LOG(LogTemp, Error, TEXT("%s() Missing DefaultAttributes for %s. Please fill in the character's Blueprint."), *FString(__FUNCTION__), *GetName());
+		UE_LOG(LogTemp, Error, TEXT("%s() Missing DefaultAttributes for %s. Please fill in the character's Blueprint."),
+		       *FString(__FUNCTION__), *GetName());
 		return;
 	}
 	FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
 	EffectContext.AddSourceObject(this);
-	const FGameplayEffectSpecHandle NewHandle = AbilitySystemComponent->MakeOutgoingSpec(GameplayEffectClass, SelfLevel, EffectContext);
+	const FGameplayEffectSpecHandle NewHandle = AbilitySystemComponent->MakeOutgoingSpec(
+		GameplayEffectClass, SelfLevel, EffectContext);
 	if (NewHandle.IsValid())
 	{
 		AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*NewHandle.Data.Get(), AbilitySystemComponent.Get());
@@ -243,7 +242,6 @@ UGOAttributeSetBase* AProjectGOCharacter::GetAttributeSetBase() const
 
 void AProjectGOCharacter::BindAttributes()
 {
-
 }
 
 void AProjectGOCharacter::StunTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
@@ -266,6 +264,7 @@ void AProjectGOCharacter::BindMouseCursorEvent()
 	OnBeginCursorOver.AddDynamic(this, &AProjectGOCharacter::CharacterCursorBeginOvered);
 	OnEndCursorOver.AddDynamic(this, &AProjectGOCharacter::CharacterCursorEndOvered);
 }
+
 void AProjectGOCharacter::Die()
 {
 	/*
@@ -313,8 +312,8 @@ void AProjectGOCharacter::MulticastHandleDeath_Implementation()
 	GetCharacterMovement()->Velocity = FVector(0);
 	OnCharacterDied.Broadcast(this);
 
-	if(!HasAuthority())
+	if (!HasAuthority())
 	{
-		HealthBar_Head->SetVisibility(false);
+		HealthBar_CharacterHead->SetVisibility(false);
 	}
 }

@@ -6,7 +6,7 @@
 #include "ProjectGO/Interaction/CombatInterface.h"
 
 UMMC_MaxHealth::UMMC_MaxHealth()
-{
+{	
 	VigorDef.AttributeToCapture = UGOAttributeSetBase::GetVigorAttribute();
 	VigorDef.AttributeSource = EGameplayEffectAttributeCaptureSource::Target;
 	VigorDef.bSnapshot = false;

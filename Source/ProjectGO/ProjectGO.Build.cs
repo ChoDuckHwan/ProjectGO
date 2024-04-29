@@ -24,7 +24,8 @@ public class ProjectGO : ModuleRules
 		{
 			"GameplayAbilities",
 			"GameplayTasks",
-			"Niagara"
+			"Niagara",
+			"Slate"
 		});
 
 	}

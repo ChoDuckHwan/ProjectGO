@@ -5,6 +5,7 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "Projects.h"
 #include "GameFramework/PlayerState.h"
 #include "ProjectGO/GOGameplayTags.h"
 #include "ProjectGO/Actor/GOProjectile.h"
@@ -47,13 +48,28 @@ void UGOProjectileSpell::SpawnProjectile(const FVector& ProjectileTargetLocation
 			
 		if (Projectile)
 		{
-			const UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetAvatarActorFromActorInfo());
-			const FGameplayEffectSpecHandle GameplayEffectSpecHandle = ASC->MakeOutgoingSpec(DamageEffectClass, GetAbilityLevel(), ASC->MakeEffectContext());
-
+			const UAbilitySystemComponent* SourceASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetAvatarActorFromActorInfo());
+			FGameplayEffectContextHandle EffectContextHandle = SourceASC->MakeEffectContext();
+			
+			EffectContextHandle.SetAbility(this);
+			EffectContextHandle.AddSourceObject(Projectile);
+			TArray<TWeakObjectPtr<AActor>> Actors;
+			Actors.Add(Projectile);
+			EffectContextHandle.AddActors(Actors);
+			FHitResult Hitresult;
+			Hitresult.Location = ProjectileTargetLocation;
+			EffectContextHandle.AddHitResult(Hitresult);
+			
+			
+			const FGameplayEffectSpecHandle GameplayEffectSpecHandle = SourceASC->MakeOutgoingSpec(DamageEffectClass, GetAbilityLevel(), EffectContextHandle);
 			const FGOGameplayTags GamePlayTags = FGOGameplayTags::Get();
-			const float ScaleDamage = Damage.GetValueAtLevel(20.f);
-			GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, FString::Printf(TEXT("Arrow Damage %f"), ScaleDamage));
-			UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(GameplayEffectSpecHandle, GamePlayTags.Damage, ScaleDamage);
+			for(const auto& DamageType : DamageTypes)
+			{
+				const float ScaleDamage = DamageType.Value.GetValueAtLevel(GetAbilityLevel());
+				GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, FString::Printf(TEXT("Arrow Damage %f"), ScaleDamage));
+				UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(GameplayEffectSpecHandle, DamageType.Key, ScaleDamage);
+			}			
+			//CT_Damage Damage by Level
 			Projectile->DamageEffectSpecHandle = GameplayEffectSpecHandle;
 			Projectile->FinishSpawning(SpawnTransform);
 		}

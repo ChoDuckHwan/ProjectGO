@@ -22,7 +22,9 @@ void AGOEffectActor::BeginPlay()
 }
 
 void AGOEffectActor::OnOverlap(AActor* TargetActor)
-{	
+{
+	if(TargetActor->ActorHasTag(FName("Monster")) && !bApplyEffectsToEnemies) return;
+
 	if(InstantEffectApplicationPoilicy == EEffectApplicationPolicy::ApplyOnOverlap)
 	{
 		ApplyEffectToTarget(TargetActor, InstantGameplayEffectClass);
@@ -39,6 +41,8 @@ void AGOEffectActor::OnOverlap(AActor* TargetActor)
 
 void AGOEffectActor::OnEndOverlap(AActor* TargetActor)
 {
+	if(TargetActor->ActorHasTag(FName("Monster")) && !bApplyEffectsToEnemies) return;
+
 	if(InstantEffectApplicationPoilicy == EEffectApplicationPolicy::ApplyOnEndOverlap)
 	{
 		ApplyEffectToTarget(TargetActor, InstantGameplayEffectClass);
@@ -73,7 +77,8 @@ void AGOEffectActor::OnEndOverlap(AActor* TargetActor)
 }
 
 void AGOEffectActor::ApplyEffectToTarget(AActor* TargetActor, TSubclassOf<UGameplayEffect> GameplayEffectClass)
-{
+{	
+	if(TargetActor->ActorHasTag(FName("Monster")) && !bApplyEffectsToEnemies) return;
 	UGOAbilitySystemComponent* TargetASC = Cast<UGOAbilitySystemComponent>(UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor));
 	if (TargetASC == nullptr) return;
 
@@ -87,6 +92,11 @@ void AGOEffectActor::ApplyEffectToTarget(AActor* TargetActor, TSubclassOf<UGamep
 	if(bIsInfiniteDuration && InfiniteEffectRemovalPoilicy == EEffectRemovalPolicy::RemoveOnEndOverlap)
 	{
 		ActiveEffectHandles.Add(ActiveEffectHandle, TargetASC);
+	}
+	
+	if(!bIsInfiniteDuration)
+	{
+		Destroy();
 	}
 }
 
