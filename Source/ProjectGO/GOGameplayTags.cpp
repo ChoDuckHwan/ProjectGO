@@ -75,6 +75,19 @@ void FGOGameplayTags::InitializeNativeGameplayTags()
 	GameplayTags.Effects_HitReact = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Effects.HitReact"), FString("Tag Granted when Hit React"));
 
 	/*
+	 *	Abilities
+	 */
+	GameplayTags.Abilities_Attack = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Attack"), FString("Abilities Attack"));
+
+
+	GameplayTags.Montage_Attack_Weapon = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Montage.Attack.Weapon"), FString("Attack Weapon"));
+	GameplayTags.Montage_Attack_Weapon_Right = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Montage.Attack.Weapon.Right"), FString("Right Weapon Attack"));
+	GameplayTags.Montage_Attack_Weapon_Left = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Montage.Attack.Weapon.Left"), FString("Left Weapon Attack"));
+
+	GameplayTags.Montage_Attack_LeftHand = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Montage.Attack.LeftHand"), FString("Left Hand Attack"));
+	GameplayTags.Montage_Attack_RightHand = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Montage.Attack.RightHand"), FString("Right Hand Attack"));
+
+	/*
 	 *	Map of GameplayTags / Resistance GameplayTags
 	 */
 	GameplayTags.DamageTypesToResistances.Add(GameplayTags.Damage_Fire, GameplayTags.Attributes_Resistance_Fire);

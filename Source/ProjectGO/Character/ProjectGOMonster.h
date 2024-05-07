@@ -45,6 +45,8 @@ protected:
 	UPROPERTY()
 	TWeakObjectPtr<AGOAIController> GOAIController;
 
+	UPROPERTY(BlueprintReadWrite, Category="Combat")
+	TWeakObjectPtr<AActor> CombatTarget;	
 public:
 	AProjectGOMonster(const class FObjectInitializer& ObjectInitializer);
 
@@ -56,6 +58,9 @@ public:
 	
 	/* Combat Interface*/
 	virtual int32 GetLevel() const override;
+
+	virtual void SetCombatTarget_Implementation(AActor* InCombatTarget) override;
+	virtual  const AActor* GetCombatTarget_Implementation() const override;
 	/* Combat Interface*/
 
 	void HitReactTagChanged(const FGameplayTag CallbackTag, int32 NewCount);

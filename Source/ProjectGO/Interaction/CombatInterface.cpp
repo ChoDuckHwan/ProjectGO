@@ -10,11 +10,6 @@ int32 ICombatInterface::GetLevel() const
 	return 1;
 }
 
-FVector ICombatInterface::GetCombatSocketLocation()
-{
-	return FVector();
-}
-
 void ICombatInterface::Die()
 {
 }

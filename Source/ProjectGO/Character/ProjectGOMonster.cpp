@@ -44,7 +44,7 @@ void AProjectGOMonster::BeginPlay()
 	InitializeAbilityValue(nullptr);
 	MonsterAbilitySystemComponent->RegisterGameplayTagEvent(FGOGameplayTags::Get().Effects_HitReact, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AProjectGOMonster::HitReactTagChanged);
 		
-	UGOAbilityBFL::GiveStartupAbilities(this, AbilitySystemComponent.Get());
+	UGOAbilityBFL::GiveStartupAbilities(this, AbilitySystemComponent.Get(), MonsterClass);
 }
 
 void AProjectGOMonster::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -60,6 +60,7 @@ void AProjectGOMonster::PossessedBy(AController* NewController)
 	
 	GOAIController = Cast<AGOAIController>(NewController);
 	check(GOAIController.Get());
+	if(!BehaviorTree) return;
 	GOAIController->GetBlackboardComponent()->InitializeBlackboard(*BehaviorTree->GetBlackboardAsset());
 	GOAIController->RunBehaviorTree(BehaviorTree);		
 
@@ -75,6 +76,16 @@ void AProjectGOMonster::InitializeAttributes() const
 int32 AProjectGOMonster::GetLevel() const
 {
 	return Level;
+}
+
+void AProjectGOMonster::SetCombatTarget_Implementation(AActor* InCombatTarget)
+{
+	CombatTarget = InCombatTarget;
+}
+
+const AActor* AProjectGOMonster::GetCombatTarget_Implementation() const
+{
+	return CombatTarget.Get();
 }
 
 void AProjectGOMonster::HitReactTagChanged(const FGameplayTag CallbackTag, int32 NewCount)

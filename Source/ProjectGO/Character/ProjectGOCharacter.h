@@ -60,7 +60,14 @@ public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	virtual UAnimMontage* GetHitReactMontage_Implementation() override;
-	
+
+	virtual bool IsDead_Implementation() const override;
+	virtual AActor* GetAvatar_Implementation() const override;
+
+	UPROPERTY(EditAnywhere, Category="Combat")
+	TArray<FTaggedMontage> AttackMontages;
+
+	virtual TArray<FTaggedMontage> GetAttackMontages_Implementation() override;
 protected:	
 	UPROPERTY(EditAnywhere)
 	float RagdollLifeTime = 5.f;
@@ -71,11 +78,20 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FName WeaponTipSocketName;
 
-	virtual FVector GetCombatSocketLocation() override;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FName RightHandSocketName;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FName LeftHandSocketName;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
+	TObjectPtr<USkeletalMeshComponent> Weapon;
+	
+	virtual FVector GetCombatSocketLocation_Implementation(const FGameplayTag& MontageTag) override;
 
 	UPROPERTY(VisibleAnywhere)
 	TWeakObjectPtr<class UGOAbilitySystemComponent> AbilitySystemComponent;
-
+	
 	UPROPERTY(VisibleAnywhere)
 	TWeakObjectPtr<class UGOAttributeSetBase> AttributeSetBase;
 	

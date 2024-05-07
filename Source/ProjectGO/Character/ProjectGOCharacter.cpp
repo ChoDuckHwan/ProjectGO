@@ -2,6 +2,7 @@
 
 #include "ProjectGOCharacter.h"
 
+#include "Abilities/GOAbilityBFL.h"
 #include "Abilities/GOCharacterGameplayAbility.h"
 #include "Abilities/AttributeSet/GOAttributeSetBase.h"
 #include "UObject/ConstructorHelpers.h"
@@ -110,6 +111,21 @@ UAnimMontage* AProjectGOCharacter::GetHitReactMontage_Implementation()
 	return HitReactMontage;
 }
 
+bool AProjectGOCharacter::IsDead_Implementation() const
+{
+	return GetAttributeSetBase()->GetHealth() <= 0;
+}
+
+AActor* AProjectGOCharacter::GetAvatar_Implementation() const
+{
+	return GetAbilitySystemComponent()->GetAvatarActor();
+}
+
+TArray<FTaggedMontage> AProjectGOCharacter::GetAttackMontages_Implementation()
+{
+	return AttackMontages;
+}
+
 void AProjectGOCharacter::InitializeAbilityValue(AGOPlayerState* PS)
 {
 	if (!AbilitySystemComponent.IsValid() || !AttributeSetBase.IsValid())
@@ -117,7 +133,7 @@ void AProjectGOCharacter::InitializeAbilityValue(AGOPlayerState* PS)
 		UE_LOG(LogTemp, Error, TEXT("&&& AbilitySystemComponent, AttributeSetBase Is Not Valid"));
 		return;
 	}
-
+	UGOAbilityBFL::GiveCommonAbilities(this, GetAbilitySystemComponent());
 	if (!HasAuthority())
 	{
 		HealthBar_CharacterHead->WidgetCreateFinished.AddLambda([&](UUserWidget* CreatedWidget)
@@ -162,10 +178,24 @@ void AProjectGOCharacter::InitializeAbilityValue(AGOPlayerState* PS)
 	}
 }
 
-FVector AProjectGOCharacter::GetCombatSocketLocation()
+FVector AProjectGOCharacter::GetCombatSocketLocation_Implementation(const FGameplayTag& MontageTag)
 {
-	if (!GetMesh()) return FVector();
-	return GetMesh()->GetSocketLocation(WeaponTipSocketName);
+	// Return correct socket based on montagetag.
+	// you can make this TMap also.
+	const FGOGameplayTags& GameplayTag = FGOGameplayTags::Get();
+	if(MontageTag.MatchesTagExact(GameplayTag.Montage_Attack_Weapon))
+	{
+		return GetMesh()->GetSocketLocation(WeaponTipSocketName);
+	}
+	if(MontageTag.MatchesTagExact(GameplayTag.Montage_Attack_LeftHand))
+	{
+		return GetMesh()->GetSocketLocation(LeftHandSocketName);
+	}
+	if(MontageTag.MatchesTagExact(GameplayTag.Montage_Attack_RightHand))
+	{
+		return GetMesh()->GetSocketLocation(RightHandSocketName);
+	}
+	return FVector();
 }
 
 void AProjectGOCharacter::AddCharacterAbilities()

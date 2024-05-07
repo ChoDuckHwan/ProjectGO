@@ -277,6 +277,12 @@ void UGOAttributeSetBase::ShowFloatText(const FEffectProperties& Properties, flo
 		if (AProjectGOPlayerController* PC = Cast<AProjectGOPlayerController>(Properties.SourceCharacter->GetController()))
 		{
 			PC->ShowDamageNumber(HitDamage, Properties.TargetCharacter, bBlockedHit, bCriticalHit);
+			return;
+		}
+		if (AProjectGOPlayerController* PC = Cast<AProjectGOPlayerController>(Properties.TargetCharacter->GetController()))
+		{
+			PC->ShowDamageNumber(HitDamage, Properties.TargetCharacter, bBlockedHit, bCriticalHit);
+			return;
 		}
 	}
 }

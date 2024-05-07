@@ -5,9 +5,11 @@
 #include "CoreMinimal.h"
 #include "GameplayEffectTypes.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "ProjectGO/Character/Abilities/Data/DA_AttributeInfo.h"
 #include "ProjectGO/Character/Abilities/Data/CharacterClassInfo.h"
 #include "GOAbilityBFL.generated.h"
 
+class UGOAttributeWidgetController;
 class UOverlayWidgetController;
 /**
  * 
@@ -28,7 +30,10 @@ public:
 	static void InitializeDefaultAttributes(const UObject* WorldContextObject, ECharacterClass CharacterClass, float Level, UAbilitySystemComponent* ASC);
 
 	UFUNCTION(BlueprintCallable, Category = "AbilitySystemLibrary|CharacterClassDefaults")
-	static void GiveStartupAbilities(const UObject* WorldContextObject, UAbilitySystemComponent* ASC);
+	static void GiveStartupAbilities(const UObject* WorldContextObject, UAbilitySystemComponent* ASC, ECharacterClass CharacterClass);
+	
+	UFUNCTION(BlueprintCallable, Category = "AbilitySystemLibrary|CharacterClassDefaults")
+	static void GiveCommonAbilities(const UObject* WorldContextObject, UAbilitySystemComponent* ASC);	
 
 	UFUNCTION(BlueprintCallable, Category = "AbilitySystemLibrary|CharacterClassInfo")
 	static UCharacterClassInfo* GetCharacterClassInfo(const UObject* WorldContextObject);
@@ -45,4 +50,10 @@ public:
 	
 	UFUNCTION(BlueprintPure, Category = "AbilitySystemLibrary|GameplayeEffect")
 	static void SetIsCriticalHit(UPARAM(ref) FGameplayEffectContextHandle& EffectContext, bool bInIsCriticalHit);
+
+	UFUNCTION(BlueprintCallable, Category = "AbilitySystemLibrary|GameplayMechanics")
+	static void GetLivePlayersWithInRadius(const UObject* WorldContextObject, TArray<AActor*>& OutOverlappingActors, const TArray<AActor*>& ActorsToIgnore, float Radius, const FVector& SphereCenter);
+
+	UFUNCTION(BlueprintPure, Category = "AbilitySystemLibrary|GameplayMechanics")
+	static bool IsNotFriend(AActor* FristActor, AActor* SecondActor);
 };

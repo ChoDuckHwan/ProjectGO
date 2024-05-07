@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "ProjectGO/GameMode/ProjectGOGameMode.h"
 #include "ProjectGO/HUD/InGameHud.h"
+#include "ProjectGO/Interaction/CombatInterface.h"
 #include "ProjectGO/Player/GOPlayerState.h"
 #include "ProjectGO/UI/GOWidgetController.h"
 
@@ -62,16 +63,33 @@ void UGOAbilityBFL::InitializeDefaultAttributes(const UObject* WorldContextObjec
 	ASC->ApplyGameplayEffectSpecToSelf(*VitalAttributeSpecHandle.Data.Get());
 }
 
-void UGOAbilityBFL::GiveStartupAbilities(const UObject* WorldContextObject, UAbilitySystemComponent* ASC)
+void UGOAbilityBFL::GiveStartupAbilities(const UObject* WorldContextObject, UAbilitySystemComponent* ASC, ECharacterClass CharacterClass)
 {	
-	UCharacterClassInfo* CharacterClassInfo = GetCharacterClassInfo(WorldContextObject);
+	UCharacterClassInfo* CharacterClassInfo = GetCharacterClassInfo(WorldContextObject);	
+	if(!CharacterClassInfo) return;	
+
+	const FCharacterClassDefaultInfo& DefaultInfo = CharacterClassInfo->GetClassDefaultInfo(CharacterClass);
+	for(const auto& AbilityClass : DefaultInfo.StartAbilities)
+	{
+		if(ICombatInterface* CombatInterface = Cast<ICombatInterface>(ASC->GetAvatarActor()))
+		{
+			FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass, CombatInterface->GetLevel());
+			ASC->GiveAbility(AbilitySpec);			
+		}		
+	}
+}
+
+void UGOAbilityBFL::GiveCommonAbilities(const UObject* WorldContextObject, UAbilitySystemComponent* ASC)
+{
+	UCharacterClassInfo* CharacterClassInfo = GetCharacterClassInfo(WorldContextObject);	
 	if(!CharacterClassInfo) return;
-	for(const auto& Abilitiy : CharacterClassInfo->Abilities)
+	for(const auto& Abilitiy : CharacterClassInfo->CommonAbilities)
 	{
 		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(Abilitiy, 1);
 		ASC->GiveAbility(AbilitySpec);
 	}
 }
+
 
 UCharacterClassInfo* UGOAbilityBFL::GetCharacterClassInfo(const UObject* WorldContextObject)
 {
@@ -113,4 +131,43 @@ void UGOAbilityBFL::SetIsCriticalHit(FGameplayEffectContextHandle& EffectContext
     	{
     		GOGameplayEffectContext->SetIsCriticalHit(bInIsCriticalHit);
     	}
+}
+
+void UGOAbilityBFL::GetLivePlayersWithInRadius(const UObject* WorldContextObject,
+	TArray<AActor*>& OutOverlappingActors, const TArray<AActor*>& ActorsToIgnore, float Radius,
+	const FVector& SphereCenter)
+{
+	//Referencing UGameplayStatics::ApplyRadialDamageWithFalloff
+	FCollisionQueryParams SphereParams;
+	SphereParams.AddIgnoredActors(ActorsToIgnore);
+
+	TArray<FOverlapResult> Overlaps;
+	if (const UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull))
+	{
+		World->OverlapMultiByObjectType(Overlaps, SphereCenter, FQuat::Identity, FCollisionObjectQueryParams(FCollisionObjectQueryParams::InitType::AllDynamicObjects), FCollisionShape::MakeSphere(Radius), SphereParams);
+		for(const auto& Overlap : Overlaps)
+		{
+			if(Overlap.GetActor()->Implements<UCombatInterface>() && !ICombatInterface::Execute_IsDead(Overlap.GetActor()))
+			{
+				OutOverlappingActors.AddUnique(ICombatInterface::Execute_GetAvatar(Overlap.GetActor()));
+			}
+		}
+	}
+}
+
+bool UGOAbilityBFL::IsNotFriend(AActor* FristActor, AActor* SecondActor)
+{
+	//Later make teamid in Playerstate and compare 
+	const bool FristIsPlayer = FristActor->ActorHasTag(FName("Player"));
+	const bool SecondIsPlayer = SecondActor->ActorHasTag(FName("Player"));
+
+	const bool FristIsMonster = FristActor->ActorHasTag(FName("Monster"));
+	const bool SecondIsMonster = FristActor->ActorHasTag(FName("Monster"));
+
+	const bool BothPlayers = FristIsPlayer && SecondIsPlayer;
+	const bool BothMonster = FristIsMonster && SecondIsMonster;
+
+	const bool Friends = BothPlayers || BothMonster;
+	return !Friends;
+
 }
