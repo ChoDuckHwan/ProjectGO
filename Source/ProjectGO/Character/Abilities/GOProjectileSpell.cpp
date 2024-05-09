@@ -29,7 +29,7 @@ void UGOProjectileSpell::SpawnProjectile(const FVector& ProjectileTargetLocation
 	if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(GetAvatarActorFromActorInfo()))
 	{
 		const FVector SocketLocation = ICombatInterface::Execute_GetCombatSocketLocation(GetAvatarActorFromActorInfo(),
-			FGOGameplayTags::Get().Montage_Attack_Weapon);
+			FGOGameplayTags::Get().CombatSocket_Weapon);
 		FRotator Rotation = (ProjectileTargetLocation - SocketLocation).Rotation();
 		Rotation.Pitch = 0.f;
 

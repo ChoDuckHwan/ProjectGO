@@ -21,10 +21,10 @@ class PROJECTGO_API AProjectGOMonster : public AProjectGOCharacter, public IMons
 private:
 
 protected:
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
 	TObjectPtr<class UGOAbilitySystemComponent> MonsterAbilitySystemComponent;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
 	TObjectPtr<class UGOAttributeSetBase> MonsterAttributeSetBase;
 
 	virtual void InitializeAbilityValue(AGOPlayerState* PS) override;

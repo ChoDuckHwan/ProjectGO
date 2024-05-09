@@ -103,6 +103,7 @@ void AProjectGOMonster::HitReactTagChanged(const FGameplayTag CallbackTag, int32
 void AProjectGOMonster::Die()
 {
 	SetLifeSpan(RagdollLifeTime);
+	if(GOAIController.IsValid())GOAIController->GetBlackboardComponent()->SetValueAsBool(FName("Dead"), true);
 	Super::Die();
 }
 

@@ -15,6 +15,7 @@ class UGOAbilitySystemComponent;
 class UGOAttributeSetBase;
 class AGOPlayerState;
 class UGOWidgetComponent;
+class UNiagaraSystem;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCharacterDiedDelegate, AProjectGOCharacter*, Character);
 
@@ -31,7 +32,7 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void MulticastHandleDeath();
 	virtual void MulticastHandleDeath_Implementation();
-
+	virtual UNiagaraSystem* GetBloodEffect_Implementation() override;
 	AProjectGOCharacter(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	
 	UPROPERTY(BlueprintAssignable, category="Character")
@@ -68,7 +69,12 @@ public:
 	TArray<FTaggedMontage> AttackMontages;
 
 	virtual TArray<FTaggedMontage> GetAttackMontages_Implementation() override;
-protected:	
+	virtual FTaggedMontage GetTaggedMontageByTag_Implementation(const FGameplayTag& MontageTag) override;
+	
+protected:
+	UFUNCTION(BlueprintCallable)
+	void SetWeaponMesh(USkeletalMeshComponent* WeaponMeshComponent);
+	
 	UPROPERTY(EditAnywhere)
 	float RagdollLifeTime = 5.f;
 
@@ -86,6 +92,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
 	TObjectPtr<USkeletalMeshComponent> Weapon;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TObjectPtr<UNiagaraSystem> BloodEffect;
 	
 	virtual FVector GetCombatSocketLocation_Implementation(const FGameplayTag& MontageTag) override;
 

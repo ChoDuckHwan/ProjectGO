@@ -39,7 +39,7 @@ AProjectGOCharacter::AProjectGOCharacter(const FObjectInitializer& ObjectInitial
 	GetMesh()->SetCollisionResponseToChannel(ECC_Projectile, ECR_Overlap);
 
 	HealthBar_CharacterHead = CreateDefaultSubobject<UGOWidgetComponent>("HealthBar_Head");
-	HealthBar_CharacterHead->SetupAttachment(GetRootComponent());
+	HealthBar_CharacterHead->SetupAttachment(GetRootComponent());	
 }
 
 
@@ -126,6 +126,23 @@ TArray<FTaggedMontage> AProjectGOCharacter::GetAttackMontages_Implementation()
 	return AttackMontages;
 }
 
+FTaggedMontage AProjectGOCharacter::GetTaggedMontageByTag_Implementation(const FGameplayTag& MontageTag)
+{
+	for(FTaggedMontage TaggedMontage : AttackMontages)
+	{
+		if(TaggedMontage.MontageTag == MontageTag)
+		{
+			return TaggedMontage;
+		}
+	}
+	return FTaggedMontage();
+}
+
+void AProjectGOCharacter::SetWeaponMesh(USkeletalMeshComponent* WeaponMeshComponent)
+{
+	Weapon = WeaponMeshComponent;
+}
+
 void AProjectGOCharacter::InitializeAbilityValue(AGOPlayerState* PS)
 {
 	if (!AbilitySystemComponent.IsValid() || !AttributeSetBase.IsValid())
@@ -183,15 +200,20 @@ FVector AProjectGOCharacter::GetCombatSocketLocation_Implementation(const FGamep
 	// Return correct socket based on montagetag.
 	// you can make this TMap also.
 	const FGOGameplayTags& GameplayTag = FGOGameplayTags::Get();
-	if(MontageTag.MatchesTagExact(GameplayTag.Montage_Attack_Weapon))
+	if(MontageTag.MatchesTagExact(GameplayTag.CombatSocket_Weapon))
 	{
-		return GetMesh()->GetSocketLocation(WeaponTipSocketName);
+		if(!IsValid(Weapon))
+		{
+			UE_LOG(LogTemp, Error, TEXT("Weapon Is Not Setted"));
+			return FVector();
+		}
+		return Weapon->GetSocketLocation(WeaponTipSocketName);
 	}
-	if(MontageTag.MatchesTagExact(GameplayTag.Montage_Attack_LeftHand))
+	if(MontageTag.MatchesTagExact(GameplayTag.CombatSocket_LeftHand))
 	{
 		return GetMesh()->GetSocketLocation(LeftHandSocketName);
 	}
-	if(MontageTag.MatchesTagExact(GameplayTag.Montage_Attack_RightHand))
+	if(MontageTag.MatchesTagExact(GameplayTag.CombatSocket_RightHand))
 	{
 		return GetMesh()->GetSocketLocation(RightHandSocketName);
 	}
@@ -346,4 +368,9 @@ void AProjectGOCharacter::MulticastHandleDeath_Implementation()
 	{
 		HealthBar_CharacterHead->SetVisibility(false);
 	}
+}
+
+UNiagaraSystem* AProjectGOCharacter::GetBloodEffect_Implementation()
+{
+	return BloodEffect;
 }

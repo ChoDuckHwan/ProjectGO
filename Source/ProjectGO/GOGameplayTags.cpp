@@ -79,14 +79,35 @@ void FGOGameplayTags::InitializeNativeGameplayTags()
 	 */
 	GameplayTags.Abilities_Attack = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Attack"), FString("Abilities Attack"));
 
+	/*
+	 *	Combat Socket
+	 */
+	GameplayTags.CombatSocket_Weapon = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("CombatSocket.Weapon"), FString("Attack Weapon"));
+	GameplayTags.CombatSocket_Weapon_Right = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("CombatSocket.Weapon.Right"), FString("Right Weapon Attack"));
+	GameplayTags.CombatSocket_Weapon_Left = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("CombatSocket.Weapon.Left"), FString("Left Weapon Attack"));
 
-	GameplayTags.Montage_Attack_Weapon = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Montage.Attack.Weapon"), FString("Attack Weapon"));
-	GameplayTags.Montage_Attack_Weapon_Right = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Montage.Attack.Weapon.Right"), FString("Right Weapon Attack"));
-	GameplayTags.Montage_Attack_Weapon_Left = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Montage.Attack.Weapon.Left"), FString("Left Weapon Attack"));
+	GameplayTags.CombatSocket_LeftHand = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("CombatSocket.LeftHand"), FString("Left Hand Attack"));
+	GameplayTags.CombatSocket_RightHand = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("CombatSocket.RightHand"), FString("Right Hand Attack"));
 
-	GameplayTags.Montage_Attack_LeftHand = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Montage.Attack.LeftHand"), FString("Left Hand Attack"));
-	GameplayTags.Montage_Attack_RightHand = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Montage.Attack.RightHand"), FString("Right Hand Attack"));
+	/*
+	 *	Default Attack
+	 */
+	GameplayTags.Montage_LeftHand = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Montage.LeftHand"), FString("Montage LeftHand"));
+	GameplayTags.Montage_RightHand = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Montage.RightHand"), FString("Montage RightHand"));
+	GameplayTags.Montage_Weapon = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Montage.Weapon"), FString("Montage Weapon"));
+	GameplayTags.Montage_Weapon_Right = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Montage.Weapon.Right"), FString("Montage Weapon Right"));
+	GameplayTags.Montage_Weapon_Left = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Montage.Weapon.Left"), FString("Montage Weapon Left"));
+	
+	/*
+	 *	Montage Attack(Skill)
+	 */
+	GameplayTags.Montage_Attack1 = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Montage.Attack1"), FString("Montage.Attack1"));
+	GameplayTags.Montage_Attack2 = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Montage.Attack2"), FString("Montage.Attack2"));
+	GameplayTags.Montage_Attack3 = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Montage.Attack3"), FString("Montage.Attack3"));
+	GameplayTags.Montage_Attack4 = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Montage.Attack4"), FString("Montage.Attack4"));
 
+	
+	
 	/*
 	 *	Map of GameplayTags / Resistance GameplayTags
 	 */
