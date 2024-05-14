@@ -63,6 +63,10 @@ public:
 	FGameplayTag Damage_Physical;
 
 	FGameplayTag Abilities_Attack;
+	FGameplayTag Abilities_Q;
+	FGameplayTag Abilities_W;
+	FGameplayTag Abilities_E;
+	FGameplayTag Abilities_R;
 
 	FGameplayTag CombatSocket_Weapon;	
 	FGameplayTag CombatSocket_Weapon_Right;

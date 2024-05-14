@@ -4,7 +4,14 @@
 #include "ProjectGO/Character/Abilities/GOAbilitySystemComponent.h"
 
 #include "GOGameplayAbilityBase.h"
+#include "Net/UnrealNetwork.h"
 #include "ProjectGO/GOGameplayTags.h"
+
+void UGOAbilitySystemComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(UGOAbilitySystemComponent, bAbilitiesGiven);
+}
 
 void UGOAbilitySystemComponent::ReceiveDamage(UGOAbilitySystemComponent* Source, float UnmitigatedDamage,	float MitigatedDamage)
 {
@@ -32,6 +39,8 @@ void UGOAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<U
 		}
 		//GiveAbilityAndActivateOnce(AbilitySpec);
 	}
+	bAbilitiesGiven = true;
+	//AbilitiesGivenDelegate.Broadcast();
 }
 
 void UGOAbilitySystemComponent::AbilityInputTagHeld(const FGameplayTag& InputTag)
@@ -58,6 +67,45 @@ void UGOAbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& Inpu
 	}
 }
 
+void UGOAbilitySystemComponent::ForEachAbility(const FForEachAbility& Delegate)
+{
+	FScopedAbilityListLock ActivateScopeLock(*this);
+	for(const auto& GampplaySpec : GetActivatableAbilities())
+	{
+		if(!Delegate.ExecuteIfBound(GampplaySpec))
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to execute delegate in %hs"), __FUNCTION__);
+		}
+	}
+}
+
+FGameplayTag UGOAbilitySystemComponent::GetAbilityTagFromSpec(const FGameplayAbilitySpec& GameplayAbilitySpec)
+{
+	if(GameplayAbilitySpec.Ability)
+	{
+		for(const auto& Tag : GameplayAbilitySpec.Ability.Get()->AbilityTags)
+		{
+			if(Tag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Abilities"))))
+			{
+				return Tag;
+			}
+		}						
+	}
+	return FGameplayTag();
+}
+
+FGameplayTag UGOAbilitySystemComponent::GetInputTagFromSpec(const FGameplayAbilitySpec& GameplayAbilitySpec)
+{
+	for(const auto& InputTag : GameplayAbilitySpec.DynamicAbilityTags)
+	{
+		if(InputTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("InputTag"))))
+		{
+			return InputTag;
+		}
+	}
+	return FGameplayTag();
+}
+
 void UGOAbilitySystemComponent::EffectApplied(UAbilitySystemComponent* ASC, const FGameplayEffectSpec& GES, FActiveGameplayEffectHandle AGEH)
 {
 	//server only
@@ -70,5 +118,24 @@ void UGOAbilitySystemComponent::EffectApplied(UAbilitySystemComponent* ASC, cons
 void UGOAbilitySystemComponent::EffectApplied_Client_Implementation(const FGameplayTagContainer& GameplayTagContainer)
 {
 	EffectAssetTags.Broadcast(GameplayTagContainer);
+}
+
+void UGOAbilitySystemComponent::OnRep_ActivateAbilities()
+{
+	Super::OnRep_ActivateAbilities();
+	if(!bAbilitiesGiven)
+	{
+		bAbilitiesGiven = true;
+		AbilitiesGivenDelegate.Broadcast();
+	}
+}
+
+void UGOAbilitySystemComponent::OnRep_AbilitiesGiven()
+{
+	if(bAbilitiesGiven)
+	{
+		//Client & Server
+		AbilitiesGivenDelegate.Broadcast();
+	}
 }
  

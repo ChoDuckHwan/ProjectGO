@@ -78,7 +78,10 @@ void FGOGameplayTags::InitializeNativeGameplayTags()
 	 *	Abilities
 	 */
 	GameplayTags.Abilities_Attack = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Attack"), FString("Abilities Attack"));
-
+	GameplayTags.Abilities_Q = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Q"), FString("Abilities Q"));
+	GameplayTags.Abilities_W = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.W"), FString("Abilities W"));
+	GameplayTags.Abilities_E = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.E"), FString("Abilities E"));
+	GameplayTags.Abilities_R = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.R"), FString("Abilities R"));
 	/*
 	 *	Combat Socket
 	 */

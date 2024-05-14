@@ -56,7 +56,7 @@ int32 AProjectGOCharacter::GetAbilityLevel(EGOAbilityID AbilityID) const
 void AProjectGOCharacter::RemoveCharacterAbilities()
 {
 	if (GetLocalRole() != ROLE_Authority || !AbilitySystemComponent.IsValid() || !AbilitySystemComponent->
-		AbilitiesGiven)
+		bAbilitiesGiven)
 	{
 		return;
 	}
@@ -74,7 +74,7 @@ void AProjectGOCharacter::RemoveCharacterAbilities()
 		AbilitySystemComponent->ClearAbility(AbilitiesToRemove[i]);
 	}
 
-	Cast<UGOAbilitySystemComponent>(AbilitySystemComponent)->AbilitiesGiven = false;
+	Cast<UGOAbilitySystemComponent>(AbilitySystemComponent)->bAbilitiesGiven = false;
 }
 
 void AProjectGOCharacter::FinishDying()
@@ -102,7 +102,7 @@ void AProjectGOCharacter::BeginPlay()
 }
 
 UAbilitySystemComponent* AProjectGOCharacter::GetAbilitySystemComponent() const
-{
+{	
 	return AbilitySystemComponent.Get();
 }
 
@@ -222,7 +222,7 @@ FVector AProjectGOCharacter::GetCombatSocketLocation_Implementation(const FGamep
 
 void AProjectGOCharacter::AddCharacterAbilities()
 {
-	if (GetLocalRole() != ROLE_Authority || !AbilitySystemComponent.IsValid() || AbilitySystemComponent->AbilitiesGiven)
+	if (GetLocalRole() != ROLE_Authority || !AbilitySystemComponent.IsValid() || AbilitySystemComponent->bAbilitiesGiven)
 	{
 		return;
 	}

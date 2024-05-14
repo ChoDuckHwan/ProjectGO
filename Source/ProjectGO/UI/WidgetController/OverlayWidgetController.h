@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
+#include "ProjectGO/Character/Abilities/Data/AbilityInfo.h"
 #include "ProjectGO/UI/GOWidgetController.h"
 #include "OverlayWidgetController.generated.h"
 
@@ -28,8 +29,8 @@ struct FUIWidgetRow : public FTableRowBase
 	TObjectPtr<UTexture2D> Image = nullptr;
 };
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributeChangedSignature, float, NewValue);
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMessageWidgetRowSignature, FUIWidgetRow, Row);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAbilityInfoSignature, const FGOAbilityInfo&, Info);
 
 /**
  * 
@@ -57,16 +58,23 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FMessageWidgetRowSignature MessageWidgetRowDelegate;
-
+	
+	UPROPERTY(BlueprintAssignable)
+	FAbilityInfoSignature AbilityInfoDelegate;
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Widget Data")
 	TObjectPtr<UDataTable> MessageWidgetDataTable;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Widget Data")
+	TObjectPtr<UAbilityInfo> AbilityInfo;
+	
 	void HealthChanged(const FOnAttributeChangeData& Data) const;
 	void MaxHealthChanged(const FOnAttributeChangeData& Data) const;
 	void ManaChanged(const FOnAttributeChangeData& Data) const;
 	void MaxManaChanged(const FOnAttributeChangeData& Data) const;
 
+	void OnInitializeStartupAbilities();
+	
 	template<typename T>
 	T* GetDataTableRowByTag(UDataTable* DataTable, const FGameplayTag& Tag);
 };

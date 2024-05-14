@@ -14,6 +14,18 @@ void UOverlayWidgetController::BroadcastInitValue()
 		 OnManaChanged.Broadcast(GOAttributeSet->GetMana());
 		 OnMaxManaChanged.Broadcast(GOAttributeSet->GetMaxMana());
 	}
+
+	if (UGOAbilitySystemComponent* GOASC = Cast<UGOAbilitySystemComponent>(AbilitySystemComponent.Get()))
+	{
+		if (GOASC->bAbilitiesGiven)
+		{
+			OnInitializeStartupAbilities();
+		}
+		else
+		{
+			GOASC->AbilitiesGivenDelegate.AddUObject(this, &ThisClass::OnInitializeStartupAbilities);
+		}
+	}
 }
 
 void UOverlayWidgetController::BindCallbacksToDependencies()
@@ -24,7 +36,7 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 		AbilitySystemComponent.Get()->GetGameplayAttributeValueChangeDelegate(GOAttributeSet->GetMaxHealthAttribute()).AddUObject(this, &ThisClass::MaxHealthChanged);
 		AbilitySystemComponent.Get()->GetGameplayAttributeValueChangeDelegate(GOAttributeSet->GetManaAttribute()).AddUObject(this, &ThisClass::ManaChanged);
 		AbilitySystemComponent.Get()->GetGameplayAttributeValueChangeDelegate(GOAttributeSet->GetMaxManaAttribute()).AddUObject(this, &ThisClass::MaxManaChanged);
-
+		
 		//AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(GOAttributeSet->GetLevelAttribute()).AddUObject(this, &ThisClass::CharacterLevelChanged);
 
 		Cast<UGOAbilitySystemComponent>(AbilitySystemComponent)->EffectAssetTags.AddLambda([&](const FGameplayTagContainer& AssetTags)
@@ -61,4 +73,30 @@ void UOverlayWidgetController::ManaChanged(const FOnAttributeChangeData& Data) c
 void UOverlayWidgetController::MaxManaChanged(const FOnAttributeChangeData& Data) const
 {
 	OnMaxManaChanged.Broadcast(Data.NewValue);
+}
+
+void UOverlayWidgetController::OnInitializeStartupAbilities()
+{
+	if(!AbilitySystemComponent.Get())
+	{
+		return;
+	}
+	UGOAbilitySystemComponent* GOASC = Cast<UGOAbilitySystemComponent>(AbilitySystemComponent);
+	if(!GOASC)
+	{
+		return;
+	}
+	if(!GOASC->bAbilitiesGiven)
+	{
+		return;
+	}
+
+	FForEachAbility BroadcastDelegate;
+	BroadcastDelegate.BindLambda([&](const FGameplayAbilitySpec& GameplayAbilitySpec)
+	{		
+		FGOAbilityInfo Info = AbilityInfo->FindAbilityInfoForTag(GOASC->GetAbilityTagFromSpec(GameplayAbilitySpec));
+		Info.InputTag = GOASC->GetInputTagFromSpec(GameplayAbilitySpec);
+		AbilityInfoDelegate.Broadcast(Info);		
+	});
+	GOASC->ForEachAbility(BroadcastDelegate);
 }

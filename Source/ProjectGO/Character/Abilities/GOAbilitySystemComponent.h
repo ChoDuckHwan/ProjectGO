@@ -8,6 +8,8 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FReceivedDamageDelegate, UGOAbilitySystemComponent*, Source, float, UnmitigatedDamage, float, MitigatedDamage);
 DECLARE_MULTICAST_DELEGATE_OneParam(FEffectAssetTags, const FGameplayTagContainer& /*AssetTags*/);
+DECLARE_MULTICAST_DELEGATE(FAbilitiesGiven);
+DECLARE_DELEGATE_OneParam(FForEachAbility, const FGameplayAbilitySpec&);
 /**
  * 
  */
@@ -17,7 +19,8 @@ class PROJECTGO_API UGOAbilitySystemComponent : public UAbilitySystemComponent
 	GENERATED_BODY()
 
 public :
-	bool AbilitiesGiven = false;
+	UPROPERTY(ReplicatedUsing=OnRep_AbilitiesGiven)
+	bool bAbilitiesGiven = false;
 	bool StartupEffectsApplied = false;
 
 	FReceivedDamageDelegate ReceivedDamage;
@@ -29,16 +32,22 @@ public :
 	void AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& StartupAbilities);
 
 	FEffectAssetTags EffectAssetTags;
+	FAbilitiesGiven AbilitiesGivenDelegate;
 
 	void AbilityInputTagHeld(const FGameplayTag& InputTag);
 	void AbilityInputTagReleased(const FGameplayTag& InputTag);
-	
-
+	void ForEachAbility(const FForEachAbility& Delegate);
+	static FGameplayTag GetAbilityTagFromSpec(const FGameplayAbilitySpec& GameplayAbilitySpec);
+	static FGameplayTag GetInputTagFromSpec(const FGameplayAbilitySpec& GameplayAbilitySpec);
 protected:
 	void EffectApplied(UAbilitySystemComponent* ASC, const FGameplayEffectSpec& GES, FActiveGameplayEffectHandle AGEH);
+	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
 
 	UFUNCTION(Client, Reliable)
 	void EffectApplied_Client(const FGameplayTagContainer& GameplayTagContainer);
 	void EffectApplied_Client_Implementation(const FGameplayTagContainer& GameplayTagContainer);
 
+	virtual void OnRep_ActivateAbilities() override;
+	UFUNCTION()
+	virtual void OnRep_AbilitiesGiven();
 };

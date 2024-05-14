@@ -4,6 +4,7 @@
 #include "ProjectGO/HUD/InGameHud.h"
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
+#include "ProjectGO/Character/Abilities/GOAbilitySystemComponent.h"
 #include "ProjectGO/UI/GOUserWidgetBase.h"
 #include "ProjectGO/UI/WidgetController/GOAttributeWidgetController.h"
 #include "ProjectGO/UI/WidgetController/OverlayWidgetController.h"
@@ -44,7 +45,7 @@ void AInGameHud::InitOverlay(APlayerController* PC, APlayerState* PS, UAbilitySy
 		UOverlayWidgetController* WidgetController = GetOverlayWidgetController(WidgetControllerParams);
 		OverlayWidget->SetWidgetController(WidgetController);
 		OverlayWidget->AddToViewport();
-		WidgetController->BroadcastInitValue();
+		WidgetController->BroadcastInitValue();		
 	}	
 }
 

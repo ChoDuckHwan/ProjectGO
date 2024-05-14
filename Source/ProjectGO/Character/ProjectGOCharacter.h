@@ -100,7 +100,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TWeakObjectPtr<class UGOAbilitySystemComponent> AbilitySystemComponent;
-	
+
 	UPROPERTY(VisibleAnywhere)
 	TWeakObjectPtr<class UGOAttributeSetBase> AttributeSetBase;
 	
