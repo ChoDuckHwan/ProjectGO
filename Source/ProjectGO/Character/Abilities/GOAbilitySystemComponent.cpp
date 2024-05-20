@@ -40,7 +40,19 @@ void UGOAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<U
 		//GiveAbilityAndActivateOnce(AbilitySpec);
 	}
 	bAbilitiesGiven = true;
-	//AbilitiesGivenDelegate.Broadcast();
+	if(GetNetMode()== NM_Standalone)
+	{
+		AbilitiesGivenDelegate.Broadcast();		
+	}
+}
+
+void UGOAbilitySystemComponent::AddCharacterPassiveAbilities(const TArray<TSubclassOf<UGameplayAbility>>& PassiveAbilities)
+{
+	for(const TSubclassOf<UGameplayAbility>& AbilityClass : PassiveAbilities)
+	{
+		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass, 1);
+		GiveAbilityAndActivateOnce(AbilitySpec);
+	}
 }
 
 void UGOAbilitySystemComponent::AbilityInputTagHeld(const FGameplayTag& InputTag)

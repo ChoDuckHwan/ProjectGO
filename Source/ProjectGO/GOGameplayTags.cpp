@@ -50,7 +50,7 @@ void FGOGameplayTags::InitializeNativeGameplayTags()
 	GameplayTags.InputTag_Item5 = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("InputTag.Item5"), FString("5 Item Use Button"));
 	GameplayTags.InputTag_Item6 = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("InputTag.Item6"), FString("6 Item Use Button"));
 
-
+	
 	/*
 	 * Damage
 	 */
@@ -109,6 +109,10 @@ void FGOGameplayTags::InitializeNativeGameplayTags()
 	GameplayTags.Montage_Attack3 = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Montage.Attack3"), FString("Montage.Attack3"));
 	GameplayTags.Montage_Attack4 = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Montage.Attack4"), FString("Montage.Attack4"));
 
+	/*
+	 *	Skill CoolDown
+	 */
+	GameplayTags.Cooldown_Skill_Q = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("CoolDown.Skill.Q"), FString("CoolDown.Skill.Q"));
 	
 	
 	/*
@@ -118,4 +122,8 @@ void FGOGameplayTags::InitializeNativeGameplayTags()
 	GameplayTags.DamageTypesToResistances.Add(GameplayTags.Damage_Lightning, GameplayTags.Attributes_Resistance_Lightning);
 	GameplayTags.DamageTypesToResistances.Add(GameplayTags.Damage_Arcane, GameplayTags.Attributes_Resistance_Arcane);
 	GameplayTags.DamageTypesToResistances.Add(GameplayTags.Damage_Physical, GameplayTags.Attributes_Resistance_Physical);
+
+
+	GameplayTags.Attributes_Meta_incomingXP = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Attributes.Meta.incomingXP"), FString("Attributes_Meta_incomingXP"));
+
 }

@@ -41,6 +41,9 @@ public:
 	FGameplayTag Attributes_Resistance_Lightning;
 	FGameplayTag Attributes_Resistance_Arcane;
 	FGameplayTag Attributes_Resistance_Physical;
+
+	FGameplayTag Attributes_Meta_incomingXP;
+
 	
 	FGameplayTag InputTag_LMB;
 	FGameplayTag InputTag_RMB;
@@ -68,6 +71,8 @@ public:
 	FGameplayTag Abilities_E;
 	FGameplayTag Abilities_R;
 
+	FGameplayTag Cooldown_Skill_Q;
+	
 	FGameplayTag CombatSocket_Weapon;	
 	FGameplayTag CombatSocket_Weapon_Right;
 	FGameplayTag CombatSocket_Weapon_Left;	

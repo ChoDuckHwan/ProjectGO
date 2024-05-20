@@ -56,4 +56,7 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "AbilitySystemLibrary|GameplayMechanics")
 	static bool IsNotFriend(AActor* FristActor, AActor* SecondActor);
+
+	UFUNCTION(BlueprintPure, Category = "AbilitySystemLibrary|GameplayMechanics")
+	static int32 GetXPRewardForClassAndLevel(const UObject* WorldContextObject, ECharacterClass CharacterClass, const int32& CharacterLevel);
 };

@@ -20,6 +20,30 @@ void AGOPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AGOPlayerState, Level);
+	DOREPLIFETIME(AGOPlayerState, XP);
+
+}
+
+void AGOPlayerState::AddXP(const int32& PlusXP)
+{
+	SetXP(XP + PlusXP);
+}
+
+void AGOPlayerState::AddToLevel(const int32& PlusLevel)
+{
+	SetLevel(Level + PlusLevel);
+}
+
+void AGOPlayerState::SetXP(const int32& NewXP)
+{
+	XP = NewXP;
+	XPChangedDelegate.Broadcast(XP);
+}
+
+void AGOPlayerState::SetLevel(const int32& NewLevel)
+{
+	Level = NewLevel;
+	LevelChangedDelegate.Broadcast(Level);
 }
 
 void AGOPlayerState::BeginPlay()
@@ -29,6 +53,12 @@ void AGOPlayerState::BeginPlay()
 
 void AGOPlayerState::OnRep_Level(const int32& oldLevel)
 {
+	LevelChangedDelegate.Broadcast(Level);
+}
+
+void AGOPlayerState::OnRep_XP(const int32& oldXP)
+{
+	XPChangedDelegate.Broadcast(XP);
 }
 
 UAbilitySystemComponent* AGOPlayerState::GetAbilitySystemComponent() const
@@ -46,7 +76,3 @@ UAttributeSet* AGOPlayerState::GetAttributeSet() const
 	return AttributeSetBase;
 }
 
-int32 AGOPlayerState::GetPlayerLevel() const
-{
-	return Level;
-}

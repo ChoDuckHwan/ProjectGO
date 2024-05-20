@@ -31,6 +31,7 @@ struct FUIWidgetRow : public FTableRowBase
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributeChangedSignature, float, NewValue);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMessageWidgetRowSignature, FUIWidgetRow, Row);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAbilityInfoSignature, const FGOAbilityInfo&, Info);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerStatChangedSignature, float, NewValue);
 
 /**
  * 
@@ -60,6 +61,12 @@ public:
 	FMessageWidgetRowSignature MessageWidgetRowDelegate;
 	
 	UPROPERTY(BlueprintAssignable)
+	FOnPlayerStatChangedSignature OnPlayerXPChanged;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnPlayerStatChangedSignature OnPlayerLevelChanged;
+	
+	UPROPERTY(BlueprintAssignable)
 	FAbilityInfoSignature AbilityInfoDelegate;
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Widget Data")
@@ -74,7 +81,9 @@ protected:
 	void MaxManaChanged(const FOnAttributeChangeData& Data) const;
 
 	void OnInitializeStartupAbilities();
-	
+
+	void OnXPChanged(const int32& NewXP);	
+	void OnLevelChanged(const int32& NewLevel);
 	template<typename T>
 	T* GetDataTableRowByTag(UDataTable* DataTable, const FGameplayTag& Tag);
 };

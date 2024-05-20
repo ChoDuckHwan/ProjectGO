@@ -151,7 +151,7 @@ void AProjectGOCharacter::InitializeAbilityValue(AGOPlayerState* PS)
 		return;
 	}
 	UGOAbilityBFL::GiveCommonAbilities(this, GetAbilitySystemComponent());
-	if (!HasAuthority())
+	if (!HasAuthority() || GetNetMode() == NM_Standalone)
 	{
 		HealthBar_CharacterHead->WidgetCreateFinished.AddLambda([&](UUserWidget* CreatedWidget)
 		{
@@ -222,11 +222,20 @@ FVector AProjectGOCharacter::GetCombatSocketLocation_Implementation(const FGamep
 
 void AProjectGOCharacter::AddCharacterAbilities()
 {
-	if (GetLocalRole() != ROLE_Authority || !AbilitySystemComponent.IsValid() || AbilitySystemComponent->bAbilitiesGiven)
+	if (!AbilitySystemComponent.IsValid() || AbilitySystemComponent->bAbilitiesGiven)
 	{
 		return;
 	}
 	AbilitySystemComponent->AddCharacterAbilities(CharacterAbilities);
+}
+
+void AProjectGOCharacter::AddCharacterPassiveAbilities()
+{
+	if (!AbilitySystemComponent.IsValid())
+	{
+		return;
+	}
+	AbilitySystemComponent->AddCharacterPassiveAbilities(StartPassiveAbilities);
 }
 
 void AProjectGOCharacter::InitializeAttributes() const

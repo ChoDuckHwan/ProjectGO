@@ -162,6 +162,10 @@ public:
 	FGameplayAttributeData IncomingDamage;
 	ATTRIBUTE_ACCESSORS(UGOAttributeSetBase, IncomingDamage)
 
+	UPROPERTY(BlueprintReadOnly, Category="Meta Attributes")
+	FGameplayAttributeData IncomingXP;
+	ATTRIBUTE_ACCESSORS(UGOAttributeSetBase, IncomingXP)
+	
 	UFUNCTION(BlueprintCallable)
 	virtual void OnRep_Health(const FGameplayAttributeData& OldHealth);
 	UFUNCTION(BlueprintCallable)
@@ -213,4 +217,5 @@ public:
 private:
 	void SetEffectProperties(const FGameplayEffectModCallbackData& Data, FEffectProperties& Props) const;
 	void ShowFloatText(const FEffectProperties& Properties, float HitDamage, bool bBlockedHit, bool bCriticalHit) const;
+	void SendXPEvent(const FEffectProperties& Properties);
 };

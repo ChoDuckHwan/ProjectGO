@@ -116,6 +116,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, category = "Animation")
 	TArray<TSubclassOf<class UGameplayAbility>> CharacterAbilities;
 
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, category = "Animation")
+	TArray<TSubclassOf<class UGameplayAbility>> StartPassiveAbilities;
+	
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, category = "Abilities")
 	TSubclassOf<class UGameplayEffect> DefaultAttributes;
 
@@ -141,6 +144,8 @@ protected:
 	TSubclassOf<UUserWidget> EnemyHealthBar_HeadClass;
 
 	virtual void AddCharacterAbilities();
+	virtual void AddCharacterPassiveAbilities();
+
 	virtual void InitializeAttributes() const;
 	virtual void AddStartupEffects();
 

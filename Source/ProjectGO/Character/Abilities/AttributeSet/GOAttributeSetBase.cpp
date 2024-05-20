@@ -12,6 +12,7 @@
 #include "ProjectGO/GOGameplayTags.h"
 #include "ProjectGO/Character/Abilities/GOAbilityBFL.h"
 #include "ProjectGO/Interaction/CombatInterface.h"
+#include "ProjectGO/Interaction/PlayerInterface.h"
 #include "ProjectGO/PlayerController/ProjectGOPlayerController.h"
 
 UGOAttributeSetBase::UGOAttributeSetBase()
@@ -97,12 +98,48 @@ void UGOAttributeSetBase::PostGameplayEffectExecute(const FGameplayEffectModCall
 				if(ICombatInterface* CombatInterface = Cast<ICombatInterface>(EffectProperties.TargetAvatarActor))
 				{
 					CombatInterface->Die();
-				}				
+				}
+				SendXPEvent(EffectProperties);
 			}
 			bool bBlocked = UGOAbilityBFL::IsBlockedHit(EffectProperties.GameplayEffectContextHandle); 
 			bool bCriticalHit = UGOAbilityBFL::IsCriticalHit(EffectProperties.GameplayEffectContextHandle); 
 
 			ShowFloatText(EffectProperties, LocalIncomingDamage, bBlocked, bCriticalHit);
+		}
+	}
+
+	if (Data.EvaluatedData.Attribute == GetIncomingXPAttribute())
+	{
+		const float LocalIncomingXP = GetIncomingXP();
+		SetIncomingXP(0.f);
+		//UE_LOG(LogTemp, Log, TEXT("Incomming XP : %f"), LocalIncomingXP);
+
+		//TODO : See if we should level up
+
+		//source character is the owner, since GA_ListenForEvents aplies GE_EventBasedEffect, adding to IncomingXP
+		if(EffectProperties.SourceCharacter->Implements<UPlayerInterface>() && EffectProperties.SourceCharacter->Implements<UCombatInterface>())
+		{
+			const int32 CurrentLevel = ICombatInterface::Execute_GetLevel(EffectProperties.SourceCharacter);
+			const int32 CurrentXP = IPlayerInterface::Execute_GetXP(EffectProperties.SourceCharacter);
+			
+			const int32 NewLevel = IPlayerInterface::Execute_FindLevelForXP(EffectProperties.SourceCharacter, CurrentXP + LocalIncomingXP); 
+			const int32 NumLevelUps = NewLevel - CurrentLevel;
+
+			if(NumLevelUps > 0 )
+			{				
+				const int32 AttributePointReward = IPlayerInterface::Execute_GetAttributePointsReward(EffectProperties.SourceCharacter, CurrentLevel);
+				const int32 SpellPointReward = IPlayerInterface::Execute_GetSpellPointsReward(EffectProperties.SourceCharacter, CurrentLevel);
+
+				IPlayerInterface::Execute_AddToPlayerLevel(EffectProperties.SourceCharacter, NumLevelUps);
+				IPlayerInterface::Execute_AddToSpellPoints(EffectProperties.SourceCharacter, AttributePointReward);
+				IPlayerInterface::Execute_AddToAttributePoints(EffectProperties.SourceCharacter, SpellPointReward);
+
+				SetHealth(GetMaxHealth());
+				SetMana(GetMaxMana());				
+				
+				IPlayerInterface::Execute_LevelUp(EffectProperties.SourceCharacter);
+			}
+			IPlayerInterface::Execute_AddToXP(EffectProperties.SourceCharacter, LocalIncomingXP);
 		}
 	}
 }
@@ -284,5 +321,22 @@ void UGOAttributeSetBase::ShowFloatText(const FEffectProperties& Properties, flo
 			PC->ShowDamageNumber(HitDamage, Properties.TargetCharacter, bBlockedHit, bCriticalHit);
 			return;
 		}
+	}
+}
+
+void UGOAttributeSetBase::SendXPEvent(const FEffectProperties& Properties)
+{
+	if(Properties.TargetCharacter->Implements<UCombatInterface>())
+	{
+		const int32 TargetLevel = ICombatInterface::Execute_GetLevel(Properties.TargetCharacter);
+		const ECharacterClass TargetClass = ICombatInterface::Execute_GetCharacterClass(Properties.TargetCharacter);
+
+		const int32 XPReward = UGOAbilityBFL::GetXPRewardForClassAndLevel(Properties.TargetCharacter, TargetClass, TargetLevel);
+
+		const FGOGameplayTags GameplayTag = FGOGameplayTags::Get();
+		FGameplayEventData Payload;
+		Payload.EventTag = GameplayTag.Attributes_Meta_incomingXP;
+		Payload.EventMagnitude = XPReward;
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Properties.SourceCharacter, GameplayTag.Attributes_Meta_incomingXP, Payload);
 	}
 }

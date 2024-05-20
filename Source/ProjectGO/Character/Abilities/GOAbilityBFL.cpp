@@ -71,9 +71,9 @@ void UGOAbilityBFL::GiveStartupAbilities(const UObject* WorldContextObject, UAbi
 	const FCharacterClassDefaultInfo& DefaultInfo = CharacterClassInfo->GetClassDefaultInfo(CharacterClass);
 	for(const auto& AbilityClass : DefaultInfo.StartAbilities)
 	{
-		if(ICombatInterface* CombatInterface = Cast<ICombatInterface>(ASC->GetAvatarActor()))
+		if(ASC->GetAvatarActor() && ASC->GetAvatarActor()->Implements<UCombatInterface>())
 		{
-			FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass, CombatInterface->GetLevel());
+			FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass, ICombatInterface::Execute_GetLevel(ASC->GetAvatarActor()));
 			ASC->GiveAbility(AbilitySpec);			
 		}		
 	}
@@ -170,4 +170,15 @@ bool UGOAbilityBFL::IsNotFriend(AActor* FristActor, AActor* SecondActor)
 	const bool Friends = BothPlayers || BothMonster;
 	return !Friends;
 
+}
+
+int32 UGOAbilityBFL::GetXPRewardForClassAndLevel(const UObject* WorldContextObject, ECharacterClass CharacterClass,	const int32& CharacterLevel)
+{
+	UCharacterClassInfo* CharacterClassInfo = GetCharacterClassInfo(WorldContextObject);
+	if (!CharacterClassInfo) return 0;
+
+	FCharacterClassDefaultInfo Info = CharacterClassInfo->GetClassDefaultInfo(CharacterClass);
+	float XPReward = Info.XPReward.GetValueAtLevel(CharacterLevel);
+
+	return static_cast<int32>(XPReward);
 }

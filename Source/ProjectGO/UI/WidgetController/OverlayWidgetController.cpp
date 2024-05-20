@@ -4,6 +4,7 @@
 #include "ProjectGO/UI/WidgetController/OverlayWidgetController.h"
 #include "ProjectGO/Character/Abilities/GOAbilitySystemComponent.h"
 #include "ProjectGO/Character/Abilities/AttributeSet/GOAttributeSetBase.h"
+#include "ProjectGO/Player/GOPlayerState.h"
 
 void UOverlayWidgetController::BroadcastInitValue()
 {
@@ -53,6 +54,11 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 			}
 		);
 	}
+	if(AGOPlayerState* GPS = CastChecked<AGOPlayerState>(PlayerState))
+	{
+		GPS->XPChangedDelegate.AddUObject(this, &UOverlayWidgetController::OnXPChanged);
+		GPS->LevelChangedDelegate.AddUObject(this, &ThisClass::OnLevelChanged);
+	}
 }
 
 void UOverlayWidgetController::HealthChanged(const FOnAttributeChangeData& Data) const
@@ -99,4 +105,35 @@ void UOverlayWidgetController::OnInitializeStartupAbilities()
 		AbilityInfoDelegate.Broadcast(Info);		
 	});
 	GOASC->ForEachAbility(BroadcastDelegate);
+}
+
+void UOverlayWidgetController::OnXPChanged(const int32& NewXP)
+{
+	if(AGOPlayerState* GPS = CastChecked<AGOPlayerState>(PlayerState))
+	{
+		checkf(GPS->LevelupInfo, TEXT("Please fill out GOPlayerState Blueprint"));
+		if(const ULevelupInfo* LevelupInfo = GPS->LevelupInfo)
+		{
+			const int32 Level = LevelupInfo->FindLevelForXP(NewXP);
+			const int32 MaxLevel = LevelupInfo->LevelupInfos.Num();
+
+			if(Level <= MaxLevel && Level > 0)
+			{
+				const int32 LevelupRequirement = LevelupInfo->LevelupInfos[Level].LevelupRequirement;
+				const int32 PreviousLevelupRequirement = LevelupInfo->LevelupInfos[Level-1].LevelupRequirement;
+
+				const int32 DeltaLevelupRequirement = LevelupRequirement - PreviousLevelupRequirement;
+				const int32 XPForThisLevel = NewXP - PreviousLevelupRequirement;
+
+				const float XPBarPercent = static_cast<float>(XPForThisLevel) / static_cast<float>(DeltaLevelupRequirement);
+
+				OnPlayerXPChanged.Broadcast(XPBarPercent);
+			}
+		}
+	}	
+}
+
+void UOverlayWidgetController::OnLevelChanged(const int32& NewLevel)
+{
+	OnPlayerLevelChanged.Broadcast(NewLevel);
 }

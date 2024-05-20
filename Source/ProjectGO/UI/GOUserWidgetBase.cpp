@@ -8,3 +8,9 @@ void UGOUserWidgetBase::SetWidgetController(UObject* InWidgetController)
 	WidgetController = InWidgetController;
 	WidgetControllerSet();
 }
+
+void UGOUserWidgetBase::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+	K2_WidgetPropertyChanged();
+}

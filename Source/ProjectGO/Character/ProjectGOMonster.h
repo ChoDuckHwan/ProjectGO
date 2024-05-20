@@ -29,7 +29,8 @@ protected:
 
 	virtual void InitializeAbilityValue(AGOPlayerState* PS) override;
 	virtual void InitializeAttributes() const override;
-
+	virtual ECharacterClass GetCharacterClass_Implementation() override;
+	
 	UFUNCTION()
 	virtual void OnRep_Level(const int32& oldLevel);
 
@@ -46,7 +47,9 @@ protected:
 	TWeakObjectPtr<AGOAIController> GOAIController;
 
 	UPROPERTY(BlueprintReadWrite, Category="Combat")
-	TWeakObjectPtr<AActor> CombatTarget;	
+	TWeakObjectPtr<AActor> CombatTarget;
+
+	
 public:
 	AProjectGOMonster(const class FObjectInitializer& ObjectInitializer);
 
@@ -57,7 +60,7 @@ public:
 	virtual void PossessedBy(AController* NewController) override;
 	
 	/* Combat Interface*/
-	virtual int32 GetLevel() const override;
+	virtual int32 GetLevel_Implementation() const;
 
 	virtual void SetCombatTarget_Implementation(AActor* InCombatTarget) override;
 	virtual  const AActor* GetCombatTarget_Implementation() const override;

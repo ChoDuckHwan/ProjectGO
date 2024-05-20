@@ -26,4 +26,12 @@ public:
 protected:
 	UFUNCTION(BlueprintImplementableEvent)
 	void WidgetControllerSet();
+
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+	
+	UFUNCTION(BlueprintImplementableEvent)
+	void K2_WidgetPropertyChanged();
+#endif
+
 };

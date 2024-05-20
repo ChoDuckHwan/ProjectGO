@@ -63,7 +63,8 @@ void AGOPlayerCharacter::PossessedBy(AController* NewController)
 	InitializeAbilityValue(PS);
 
 	AddStartupEffects();
-	AddCharacterAbilities();	
+	AddCharacterAbilities();
+	AddCharacterPassiveAbilities();
 }
 
 void AGOPlayerCharacter::OnRep_PlayerState()
@@ -73,10 +74,63 @@ void AGOPlayerCharacter::OnRep_PlayerState()
 	InitializeAbilityValue(PS);
 }
 
-int32 AGOPlayerCharacter::GetLevel() const
+int32 AGOPlayerCharacter::GetLevel_Implementation() const
 {
 	check(GetPlayerState<AGOPlayerState>());
 	return GetPlayerState<AGOPlayerState>()->GetPlayerLevel();	
+}
+
+void AGOPlayerCharacter::AddToXP_Implementation(const int32& XP)
+{
+	check(GetPlayerState<AGOPlayerState>());
+	return GetPlayerState<AGOPlayerState>()->AddXP(XP);	
+}
+
+void AGOPlayerCharacter::LevelUp_Implementation()
+{
+	
+}
+
+int32 AGOPlayerCharacter::GetXP_Implementation() const
+{
+	check(GetPlayerState<AGOPlayerState>());
+	return GetPlayerState<AGOPlayerState>()->GetPlayerXP();
+}
+
+int32 AGOPlayerCharacter::FindLevelForXP_Implementation(const int32& InXP) const
+{
+	check(GetPlayerState<AGOPlayerState>());
+	return GetPlayerState<AGOPlayerState>()->LevelupInfo->FindLevelForXP(InXP);
+}
+
+int32 AGOPlayerCharacter::GetAttributePointsReward_Implementation(int32 Level) const
+{
+	check(GetPlayerState<AGOPlayerState>());
+	return GetPlayerState<AGOPlayerState>()->LevelupInfo->LevelupInfos[Level].SkillPointAward;
+}
+
+int32 AGOPlayerCharacter::GetSpellPointsReward_Implementation(int32 Level) const
+{
+	check(GetPlayerState<AGOPlayerState>());
+	return GetPlayerState<AGOPlayerState>()->LevelupInfo->LevelupInfos[Level].AttributePointAward;
+}
+
+void AGOPlayerCharacter::AddToPlayerLevel_Implementation(int32 InPlayerLevel)
+{
+	check(GetPlayerState<AGOPlayerState>());
+	GetPlayerState<AGOPlayerState>()->AddToLevel(InPlayerLevel);
+}
+
+void AGOPlayerCharacter::AddToAttributePoints_Implementation(int32 InAttributePoint)
+{
+	check(GetPlayerState<AGOPlayerState>());
+	//return GetPlayerState<AGOPlayerState>()->LevelupInfo->FindLevelForXP(InXP);
+}
+
+void AGOPlayerCharacter::AddToSpellPoints_Implementation(int32 InSpellPoint)
+{
+	check(GetPlayerState<AGOPlayerState>());
+	//return GetPlayerState<AGOPlayerState>()->LevelupInfo->FindLevelForXP(InXP);
 }
 
 void AGOPlayerCharacter::InitializeAbilityValue(AGOPlayerState* PS)

@@ -73,7 +73,12 @@ void AProjectGOMonster::InitializeAttributes() const
 	UGOAbilityBFL::InitializeDefaultAttributes(this, MonsterClass, Level, GetAbilitySystemComponent());
 }
 
-int32 AProjectGOMonster::GetLevel() const
+ECharacterClass AProjectGOMonster::GetCharacterClass_Implementation()
+{
+	return MonsterClass;
+}
+
+int32 AProjectGOMonster::GetLevel_Implementation() const
 {
 	return Level;
 }
@@ -95,9 +100,8 @@ void AProjectGOMonster::HitReactTagChanged(const FGameplayTag CallbackTag, int32
 	UE_LOG(LogTemp, Log, TEXT("HitReactTagChanged Called"));
 	if(GOAIController.Get())
 	{
-		GOAIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), bHitReacting);		
+		GOAIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), bHitReacting);
 	}
-
 }
 
 void AProjectGOMonster::Die()
