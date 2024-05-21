@@ -3,8 +3,10 @@
 
 #include "ProjectGO/UI/WidgetController/GOAttributeWidgetController.h"
 #include "GameplayTagsManager.h"
+#include "ProjectGO/Character/Abilities/GOAbilitySystemComponent.h"
 #include "ProjectGO/Character/Abilities/AttributeSet/GOAttributeSetBase.h"
 #include "ProjectGO/Character/Abilities/Data/DA_AttributeInfo.h"
+#include "ProjectGO/Player/GOPlayerState.h"
 
 
 void UGOAttributeWidgetController::BroadcastAttributeInfo(const FGameplayTag& AttributeTag,	const FGameplayAttribute& Attribute) const
@@ -23,6 +25,10 @@ void UGOAttributeWidgetController::BroadcastInitValue()
 	{
 		BroadcastAttributeInfo(Attribute.Key, Attribute.Value());		
 	}
+	if(AGOPlayerState* GPS = CastChecked<AGOPlayerState>(PlayerState))
+	{
+		AttributePointsChangedDelegate.Broadcast(GPS->GetAttributePoints());
+	}
 }
 
 void UGOAttributeWidgetController::BindCallbacksToDependencies()
@@ -35,5 +41,27 @@ void UGOAttributeWidgetController::BindCallbacksToDependencies()
 			{
 				BroadcastAttributeInfo(Attribute.Key, Attribute.Value());
 			});
-	}	
+	}
+	if(AGOPlayerState* GPS = CastChecked<AGOPlayerState>(PlayerState))
+	{
+		GPS->AttributePointChangedDelegate.AddWeakLambda(this, [this](const int32& AttributePoints)
+		{
+			AttributePointsChangedDelegate.Broadcast(AttributePoints);
+		});
+		GPS->SpellPointChangedDelegate.AddWeakLambda(this, [this](const int32& SpellPoints)
+		{
+			SpellPointsChangedDelegate.Broadcast(SpellPoints);
+		});
+	}
+}
+
+void UGOAttributeWidgetController::UpgradeAttribute(const FGameplayTag& AttributeTag)
+{
+	UGOAbilitySystemComponent* GOASC = CastChecked<UGOAbilitySystemComponent>(AbilitySystemComponent);
+	GOASC->UpgradeAttribute(AttributeTag);
+}
+
+void UGOAttributeWidgetController::UpgradeSpell(const FGameplayTag& AttributeTag)
+{
+	
 }

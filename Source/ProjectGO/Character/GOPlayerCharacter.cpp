@@ -77,18 +77,17 @@ void AGOPlayerCharacter::OnRep_PlayerState()
 int32 AGOPlayerCharacter::GetLevel_Implementation() const
 {
 	check(GetPlayerState<AGOPlayerState>());
-	return GetPlayerState<AGOPlayerState>()->GetPlayerLevel();	
+	return GetPlayerState<AGOPlayerState>()->GetPlayerLevel();
 }
 
 void AGOPlayerCharacter::AddToXP_Implementation(const int32& XP)
 {
 	check(GetPlayerState<AGOPlayerState>());
-	return GetPlayerState<AGOPlayerState>()->AddXP(XP);	
+	return GetPlayerState<AGOPlayerState>()->AddXP(XP);
 }
 
 void AGOPlayerCharacter::LevelUp_Implementation()
 {
-	
 }
 
 int32 AGOPlayerCharacter::GetXP_Implementation() const
@@ -103,16 +102,34 @@ int32 AGOPlayerCharacter::FindLevelForXP_Implementation(const int32& InXP) const
 	return GetPlayerState<AGOPlayerState>()->LevelupInfo->FindLevelForXP(InXP);
 }
 
-int32 AGOPlayerCharacter::GetAttributePointsReward_Implementation(int32 Level) const
+int32 AGOPlayerCharacter::GetAttributePointsReward_Implementation(int32 CurrentLevel, int32 NewLevel) const
 {
 	check(GetPlayerState<AGOPlayerState>());
-	return GetPlayerState<AGOPlayerState>()->LevelupInfo->LevelupInfos[Level].SkillPointAward;
+	int32 AttributeRewardCnt = 0;
+	if (NewLevel >= GetPlayerState<AGOPlayerState>()->LevelupInfo->LevelupInfos.Num())
+	{
+		return 0;
+	}
+	for (int i = CurrentLevel + 1; i <= NewLevel; ++i)
+	{
+		AttributeRewardCnt += GetPlayerState<AGOPlayerState>()->LevelupInfo->LevelupInfos[i].AttributePointAward;		
+	}
+	return AttributeRewardCnt;
 }
 
-int32 AGOPlayerCharacter::GetSpellPointsReward_Implementation(int32 Level) const
+int32 AGOPlayerCharacter::GetSpellPointsReward_Implementation(int32 CurrentLevel, int32 NewLevel) const
 {
 	check(GetPlayerState<AGOPlayerState>());
-	return GetPlayerState<AGOPlayerState>()->LevelupInfo->LevelupInfos[Level].AttributePointAward;
+	int32 SpellPointRewardCnt = 0;
+	if (NewLevel >= GetPlayerState<AGOPlayerState>()->LevelupInfo->LevelupInfos.Num())
+	{
+		return 0;
+	}
+	for (int i = CurrentLevel + 1; i <= NewLevel; ++i)
+	{
+		SpellPointRewardCnt += GetPlayerState<AGOPlayerState>()->LevelupInfo->LevelupInfos[i].SkillPointAward;
+	}
+	return SpellPointRewardCnt;
 }
 
 void AGOPlayerCharacter::AddToPlayerLevel_Implementation(int32 InPlayerLevel)
@@ -124,13 +141,25 @@ void AGOPlayerCharacter::AddToPlayerLevel_Implementation(int32 InPlayerLevel)
 void AGOPlayerCharacter::AddToAttributePoints_Implementation(int32 InAttributePoint)
 {
 	check(GetPlayerState<AGOPlayerState>());
-	//return GetPlayerState<AGOPlayerState>()->LevelupInfo->FindLevelForXP(InXP);
+	GetPlayerState<AGOPlayerState>()->AddToAttributePoints(InAttributePoint);
 }
 
 void AGOPlayerCharacter::AddToSpellPoints_Implementation(int32 InSpellPoint)
 {
 	check(GetPlayerState<AGOPlayerState>());
-	//return GetPlayerState<AGOPlayerState>()->LevelupInfo->FindLevelForXP(InXP);
+	GetPlayerState<AGOPlayerState>()->AddToSpellPoints(InSpellPoint);
+}
+
+int32 AGOPlayerCharacter::GetAttributePoints_Implementation() const
+{
+	check(GetPlayerState<AGOPlayerState>());
+	return GetPlayerState<AGOPlayerState>()->GetAttributePoints();
+}
+
+int32 AGOPlayerCharacter::GetSpellPoints_Implementation() const
+{
+	check(GetPlayerState<AGOPlayerState>());
+	return GetPlayerState<AGOPlayerState>()->GetSpellPoints();
 }
 
 void AGOPlayerCharacter::InitializeAbilityValue(AGOPlayerState* PS)
@@ -140,7 +169,7 @@ void AGOPlayerCharacter::InitializeAbilityValue(AGOPlayerState* PS)
 		AbilitySystemComponent = Cast<UGOAbilitySystemComponent>(PS->GetAbilitySystemComponent());
 		AttributeSetBase = PS->GetAttributeSetBase();
 		//AI maybe cannot have controller so abilityactorinfoinit here
-		if(!AbilitySystemComponent.IsValid() || !AttributeSetBase.IsValid())
+		if (!AbilitySystemComponent.IsValid() || !AttributeSetBase.IsValid())
 		{
 			UE_LOG(LogTemp, Error, TEXT("AbilitySystemComponent, AttributeSetBase Is Not Valid"));
 			return;

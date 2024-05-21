@@ -6,6 +6,8 @@
 #include "ProjectGO/UI/GOWidgetController.h"
 #include "GOAttributeWidgetController.generated.h"
 class UDA_AttributeInfo;
+
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAttributeInfoSignature, const FGOAttributeInfo&, Info);
 
 /**
@@ -26,6 +28,18 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "GAS|Attributes")
 	FAttributeInfoSignature AttributeInfoDelegate;
 
+	UPROPERTY(BlueprintAssignable, Category = "GAS|Attributes")
+	FOnPlayerStatChangedSignature AttributePointsChangedDelegate;
+
+	UPROPERTY(BlueprintAssignable, Category = "GAS|Attributes")
+	FOnPlayerStatChangedSignature SpellPointsChangedDelegate;
+
+	UFUNCTION(BlueprintCallable)
+	void UpgradeAttribute(const FGameplayTag& AttributeTag);
+
+	UFUNCTION(BlueprintCallable)
+	void UpgradeSpell(const FGameplayTag& AttributeTag);
+	
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UDA_AttributeInfo> AttributeInfo;

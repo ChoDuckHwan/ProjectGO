@@ -21,6 +21,8 @@ void AGOPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AGOPlayerState, Level);
 	DOREPLIFETIME(AGOPlayerState, XP);
+	DOREPLIFETIME(AGOPlayerState, AttributePoints);
+	DOREPLIFETIME(AGOPlayerState, SpellPoints);
 
 }
 
@@ -32,6 +34,18 @@ void AGOPlayerState::AddXP(const int32& PlusXP)
 void AGOPlayerState::AddToLevel(const int32& PlusLevel)
 {
 	SetLevel(Level + PlusLevel);
+}
+
+void AGOPlayerState::AddToAttributePoints(const int32& AddValue)
+{
+	AttributePoints += AddValue;
+	AttributePointChangedDelegate.Broadcast(AttributePoints);
+}
+
+void AGOPlayerState::AddToSpellPoints(const int32& AddValue)
+{
+	SpellPoints += AddValue;
+	SpellPointChangedDelegate.Broadcast(SpellPoints);
 }
 
 void AGOPlayerState::SetXP(const int32& NewXP)
@@ -59,6 +73,16 @@ void AGOPlayerState::OnRep_Level(const int32& oldLevel)
 void AGOPlayerState::OnRep_XP(const int32& oldXP)
 {
 	XPChangedDelegate.Broadcast(XP);
+}
+
+void AGOPlayerState::OnRep_AttributePoints(const int32& OldValue)
+{
+	AttributePointChangedDelegate.Broadcast(AttributePoints);
+}
+
+void AGOPlayerState::OnRep_SpellPoints(const int32& OldValue)
+{
+	SpellPointChangedDelegate.Broadcast(SpellPoints);
 }
 
 UAbilitySystemComponent* AGOPlayerState::GetAbilitySystemComponent() const

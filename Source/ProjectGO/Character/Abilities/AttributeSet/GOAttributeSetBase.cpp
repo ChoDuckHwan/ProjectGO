@@ -127,20 +127,36 @@ void UGOAttributeSetBase::PostGameplayEffectExecute(const FGameplayEffectModCall
 
 			if(NumLevelUps > 0 )
 			{				
-				const int32 AttributePointReward = IPlayerInterface::Execute_GetAttributePointsReward(EffectProperties.SourceCharacter, CurrentLevel);
-				const int32 SpellPointReward = IPlayerInterface::Execute_GetSpellPointsReward(EffectProperties.SourceCharacter, CurrentLevel);
+				const int32 AttributePointReward =IPlayerInterface::Execute_GetAttributePointsReward(EffectProperties.SourceCharacter, CurrentLevel, NewLevel);
+				const int32 SpellPointReward = IPlayerInterface::Execute_GetSpellPointsReward(EffectProperties.SourceCharacter, CurrentLevel, NewLevel);
 
 				IPlayerInterface::Execute_AddToPlayerLevel(EffectProperties.SourceCharacter, NumLevelUps);
 				IPlayerInterface::Execute_AddToSpellPoints(EffectProperties.SourceCharacter, AttributePointReward);
 				IPlayerInterface::Execute_AddToAttributePoints(EffectProperties.SourceCharacter, SpellPointReward);
 
-				SetHealth(GetMaxHealth());
-				SetMana(GetMaxMana());				
-				
 				IPlayerInterface::Execute_LevelUp(EffectProperties.SourceCharacter);
+
+				bTopOffHealth = true;
+				bTopOffMana = true;		
 			}
 			IPlayerInterface::Execute_AddToXP(EffectProperties.SourceCharacter, LocalIncomingXP);
 		}
+	}
+}
+
+void UGOAttributeSetBase::PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
+{	
+	Super::PostAttributeChange(Attribute, OldValue, NewValue);
+	if(Attribute == GetMaxHealthAttribute() && bTopOffHealth)
+	{
+		bTopOffHealth = false;
+		SetHealth(GetMaxHealth());
+	}
+
+	if(Attribute == GetManaAttribute() && bTopOffMana)
+	{
+		bTopOffMana = false;
+		SetMana(GetMaxMana());
 	}
 }
 

@@ -3,9 +3,11 @@
 
 #include "ProjectGO/Character/Abilities/GOAbilitySystemComponent.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
 #include "GOGameplayAbilityBase.h"
 #include "Net/UnrealNetwork.h"
 #include "ProjectGO/GOGameplayTags.h"
+#include "ProjectGO/Interaction/PlayerInterface.h"
 
 void UGOAbilitySystemComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -116,6 +118,32 @@ FGameplayTag UGOAbilitySystemComponent::GetInputTagFromSpec(const FGameplayAbili
 		}
 	}
 	return FGameplayTag();
+}
+
+void UGOAbilitySystemComponent::UpgradeAttribute(const FGameplayTag& AttributeTag)
+{
+	if(GetAvatarActor()->Implements<UPlayerInterface>())
+	{
+		if(IPlayerInterface::Execute_GetAttributePoints(GetAvatarActor()) > 0)
+		{
+			ServerUpgradeAttribute(AttributeTag);
+		}
+	}
+}
+
+void UGOAbilitySystemComponent::ServerUpgradeAttribute_Implementation(const FGameplayTag& AttributeTag)
+{
+	//Send to GA_ListenForEvent.Uasset
+	FGameplayEventData Payload;
+	Payload.EventTag = AttributeTag;
+	Payload.EventMagnitude = 1.f;
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActor(), AttributeTag, Payload);
+
+	if(GetAvatarActor()->Implements<UPlayerInterface>())
+	{
+		IPlayerInterface::Execute_AddToAttributePoints(GetAvatarActor(), -1);
+	}
 }
 
 void UGOAbilitySystemComponent::EffectApplied(UAbilitySystemComponent* ASC, const FGameplayEffectSpec& GES, FActiveGameplayEffectHandle AGEH)
